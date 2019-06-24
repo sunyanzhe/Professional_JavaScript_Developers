@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        #myDiv{
+            position: absolute;
+            background: rgb(255,0,0);
+            width: 50px;
+            height: 50px;
+            
+        }
+    </style>
+</head>
+<body>
+    <div id="myDiv" class="draggable"></div>
+    <div id="status"></div>
+    <script>
+    //22.5拖放                p618
+        //拖放的基本概念很简单：创建一个绝对定位的元素，使其可以用鼠标移动。
+        //这个技术源自一种叫做"鼠标拖尾"的经典网页技巧。
+        //鼠标拖尾是一个或多个图片在页面上跟着鼠标指针移动。
+        //单元素鼠标拖尾的基本代码需要为文档设置一个onmousemove事件处理程序，它总是将指定元素移动到鼠标指针的位置
+        // document.addEventListener("mousemove",function(event){
+        //     var div=document.getElementById("myDiv");
+        //     div.style.left=event.clientX+"px";
+        //     div.style.top=event.clientY+"px";
+        // },false);
+        function EventTarget(){
+            this.handlers={};
+        }
+        EventTarget.prototype={
+            constructor:EventTarget,
+            addHandler:function(type,handle){
+                if(!(this.handlers[type] instanceof Array)){
+                    this.handlers[type]=[];
+                }
+                this.handlers[type].push(handle);
+            },
+            fire:function(event){
+                if(!event.target){
+                    event.target=this;
+                }
+                if(this.handlers[event.type] instanceof Array){
+                    var handlers=this.handlers[event.type];
+                    handlers.forEach(function(item,index,arr){
+                        item(event);
+                    });
+                }
+            },
+            removeHandler:function(type,handle){
+                if(this.handlers[type] instanceof Array){
+                    var handlers=this.handlers[type];
+                    handlers.forEach(function(item,index,arr){
+                        if(handlers(index)===handle){
+                            handlers.splice(index,1);
+                            break;
+                        } 
+                    });
+                }
+            }
+        }
+        /*var DragDrop=function(){
+            var dragging=null;
+            function handleEvent(event){
+                var target=event.target;
+                //确定事件类型
+                switch(event.type){
+                    case "mousedown":
+                        if(target.className.indexOf("draggable")>-1){
+                            dragging=target;
+                        }
+                        break;
+                    case "mousemove":
+                        if(dragging!==null){
+                            //指定位置
+                            dragging.style.top=event.clientY+"px";
+                            dragging.style.left=event.clientX+"px";
+                        }
+                        break;
+
+                    case "mouseup":
+                        dragging=null;
+                        break;
+                }
+            };
+            //公共接口
+            return {
+                enable:function(){
+                    document.addEventListener("mousedown",handleEvent,false);
+                    document.addEventListener("mousemove",handleEvent,false);
+                    document.addEventListener("mouseup",handleEvent,false);
+                },
+                disable:function(){
+                    document.removeEventListener("mousedown",handleEvent,false);
+                    document.removeEventListener("mousemove",handleEvent,false);
+                    document.removeEventListener("mouseup",handleEvnet,false);
+                }
+            }
+        }();
+        DragDrop.enable();
+        */
+
+        //元素的左上角总是和指针在一起。
+        //这个结果对用户来说体验并不好，因为当鼠标开始移动的时候，元素好像突然跳了一下.
+       /* var DragDrop=function(){
+            var dragging=null,
+                diffX=0,
+                diffY=0;
+            function handleEvent(event){
+                var target=event.target;
+                switch (event.type) {
+                    case "mousedown":
+                        if(target.className.indexOf("draggable")>-1){
+                            dragging=target;
+                            diffX=event.clientX-target.offsetLeft;
+                            diffY=event.clientY-target.offsetTop;
+                        }
+                        break;
+                    case "mousemove":
+                        if(dragging!==null){
+                            //指定位置
+                            dragging.style.left=(event.clientX-diffX)+"px";
+                            dragging.style.top=(event.clientY-diffY)+"px";
+                        }
+                        break;
+                    case "mouseup":
+                        dragging=null;
+                        break;
+                };
+
+                //公共接口
+                return {
+                    enable:function(){
+                        document.addEventListener("mousedown",handleEvent,false);
+                        document.addEventListener("mousemove",handleEvent,false);
+                        document.addEventListener("mouseup",handleEvent,false);
+                    },
+                    disable:function(){
+                        document.removeEventListener("mousedown",handleEvent,false);
+                        document.removeEventListener("mousemove",handleEvent,false);
+                        document.removeEventListener("mouseup",handleEvent,false);
+                    }
+                }
+            }
+        }();*/
+
+        //diffX和diffY变量是私有的，因为只有handleEvent()函数需要用到它们。
+        //当mousedown事件发生时，通过clientX减去目标的offsetLeft，clientY减去目标的offseTop，可以计算到这两个变量的值。
+        //当触发了mousemove事件后，就可以使用这些变量从指针坐标中减去，得到最终的坐标
+
+        //22.5.2.添加自定义事件                    p622
+            //由于DragDrop对象是一个使用了模块模式的单例，所以需要进行一些更改来使用EventTarget类型。
+            //首先，创建一个新的EventTarget对象，然后天剑enable()和disable()方法，最后返回这个对象。
+
+
+            var DragDrop=function(){
+                var dragdrop=new EventTarget(),
+                    dragging=null,
+                    diffX=0,
+                    diffY=0;
+
+                    function handleEvent(event){
+                        var target=event.target;
+                        switch (event.type) {
+                            case "mousedown":
+                                if(target.className.indexOf("draggable")>-1){
+                                    dragging=target;
+                                    diffX=event.clientX-target.offsetLeft;
+                                    diffY=event.clientY-target.offsetTop;
+                                    dragdrop.fire({type:"dragstart",target:dragging,x:event.clientX,y:event.clientY});
+                                }
+                                break;
+                            case "mousemove":
+                                if(dragging!==null){
+                                    dragging.style.left=(event.clientX-diffX)+"px";
+                                    dragging.style.top=(event.clientY-diffY)+"px";
+                                    //触发自定义事件
+                                    dragdrop.fire({type:"drag",target:dragging,x:event.clientX,y:event.clientY});
+                                }
+                                break;
+                            case "mouseup":
+                                dragdrop.fire({type:"dragend",target:dragging,x:event.clientX,y:event.clientY});
+                                dragging=null;  
+                                break;    
+                            default:
+                                break;
+                        }
+                    }
+                    //公共接口
+                    dragdrop.enable=function(){
+                        document.addEventListener("mousedown",handleEvent,false);
+                        document.addEventListener("mousemove",handleEvent,false);
+                        document.addEventListener("mouseup",handleEvent,false);
+                    };
+                    dragdrop.disable=function(){
+                        document.removeEventListener("mousedown",handleEvent,false);
+                        document.removeEventListener("mousemove",handleEvent,false);
+                        document.removeEventListener("mouseup",handleEvent,false);
+                    };
+                    return dragdrop;
+            }();
+
+            DragDrop.addHandler("dragstart",function(event){
+                var status=document.getElementById("status");
+                status.innerHTML="Started dragging "+event.target.id;
+            });
+            DragDrop.addHandler("drag",function(event){
+                var status=document.getElementById("status");
+                status.innerHTML+="<br/> Dragged "+event.target.id+" to ("+event.x+","+event.y+")";
+            });
+            DragDrop.addHandler("dragend",function(event){
+                var status=document.getElementById("status");
+                status.innerHTML+="<br/> Dropped "+event.target.id+" at ("+event.x+","+event.y+")";
+            });
+            DragDrop.enable();
+
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <div id="output"></div>
+    <script>
+        //如果页面最小化了或隐藏在了其他标签后面，那么有些功能是可以停下来的，比如轮询服务器或者某些动画效果
+        //Page Visibility API就是为了让卡法人员知道页面是否对用户可见而推出的
+        //这个API本身非常简单，由以下三部分组成
+        //1.document.hidden:表示页面是否隐藏的布尔值，页面隐藏包括页面在后台标签页中或者浏览器最小化
+        //2.document.VisibilityState:表示下列4个可能状态的值
+            //页面在后台标签页中或者浏览器最小化
+            //页面在前台标签页中
+            //实际的页面已经隐藏，但用户可以看到页面的预览(就像在window7中，用户把鼠标移动到任务栏的图标中，就可以显示浏览器中当前页面的预览)
+            //页面在屏幕外执行预渲染处理
+
+        //3.visibilitychange事件:当文档从可见变为不可见或者从不可见变为可见的时候，触发该事件
+
+        //document.hidden在IE的实现是document.msHidden,而在Chrome的实现中则是document.webkitHidden。
+        //检查浏览器是否支持这个API的最佳方式如下
+        function isHiddenSupprot(){
+            return ("hidden" in document||"msHidden" in document||"webkitHidden" in document);
+        } 
+        
+
+
+        //为了页面从可见变为不可见或从不可见变为可见时收到通知，可以真题visibiliitychange事件
+        //在IE中，这个事件叫msVisibilitychange，而在Chrome中这个事件叫webkitVisibilitychange。
+        //为了在两个浏览器中都能侦听到这个事件，可以为每个事件都指定相同的事件处理程序
+        function handleVisibilityChange(){
+            var output=document.getElementById("output"),msg;
+            if(document.hidden||document.msHidden||document.webkitHidden){
+                msg="Page is now hidden. "+(new Date())+"<br />";
+            }else{
+                msg="Page is now visible. "+(new Date())+"<br />";
+            }
+            output.innerHTML+=msg;
+        }
+        document.addEventListener("msvisibilitychange",handleVisibilityChange,false);
+        document.addEventListener("webkitvisibilitychange",handleVisibilityChange,false);
+
+        //差异最大的是document.VisibilityState属性
+        //document.msVisbiilityState是一个表示如下4中状态的数字值
+            //document.MS_PAGE_HIDDEN(0)
+            //document.MS_PAGE_VISIBLE(1)
+            //document.MS_PAGE_PREVIEW(2)
+            //document.MS_PAGE_PRERENDER(3)
+    </script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style>
+			#arrow{
+				width: 100px;
+				height: 100px;
+				transform: perspective(300px);
+				background: black;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="myDiv"></div>
+		<div id="output"></div>
+		<div id="output2"></div>
+		<div id="arrow"></div>
+		<div id="output3"></div>
+	<script>
+	//13.4.8 设备事件			p395
+	//智能手机和平板电脑的普及，为用户与浏览器交互引入了一种新的方式，而一类新事件也应运而生。
+	//设备事件(device event)可以让开发人员确定用户在怎样使用设备。
+	//W3C从2011年开始着手制定了一份关于设备事件的新草案(http://dev.w3.org/geo/api/spec-source-orientation.html),以涵盖不断增长的设备类型并为它们定义相关的事件。
+	//本节会同时讨论这份草案中涉及的API和特定于浏览器开发商的事件中。
+	//1.orientatonchange 事件		p395
+		//苹果公司为移动Safari中添加了orientationchange事件，以便开发人员能够确定用户何时将设备由横向查看模式切换为纵向查看模式。
+		//移动Safari的window.orientation属性中可能包含3个值：0表示肖像值，90表示向左旋转的横向模式("主屏幕"按钮在右侧)，-90表示向右旋转的横向模式("主屏幕"按钮在左侧)
+		//相关文档还提到了一个值，即180表示iphone头朝下;但这种模式至今尚未得到支持
+		//p395图13-10展示了window.orientation的每个值的含义
+		
+		//只要用户改变了设备的查看模式，就会触发orientationchange事件。
+		//此时的event对象不包含任何有价值的信息，因为唯一相关的信息可以通过window.orientation访问到。
+		
+		window.addEventListener("load",function(event){
+			var div=document.getElementById("myDiv")
+			div.innerHTML="Current orientation is "+window.orientation;
+			window.addEventListener("orientationchange",function(event){
+				div.innerHTML="Current orientation is "+window.orientation;
+			},false);
+		},false);
+		
+		//在这个例子中，当触发load事件时会显示最初的方向信息。然后，添加了处理orientationchange事件的处理程序。
+		//只要发生这个事件，就会有表示新方向的信息更新页面中的消息
+		//所有IOS设备都支持orientationchange事件和window.orientation属性
+		//由于可以将orientationchange看成window事件，所以也可以通过制定<body>元素的orientationchange特性来指定事件处理程序
+		
+	//2.MozOrientation事件		p396
+		//Firefox 3.6位检测设备的方向引入了一个名为MozOrientation的新事件。(前缀Moz表示这个特定于浏览器开发商的事件，不是标准事件)
+		//当设备的加速计检测到设备方向改变时，就会触发这个事件。但这个事件与IOS中的orientationchange事件不同，该事件只能提供一个平面的方向变化。
+		//MozOrientation事件是在window上触发的
+		//其event对象包含三个属性:x、y、z。这三个属性的值都介于1到-1之间，表示不同坐标轴上的方向。
+		//在静止状态下，x值为0，y值为0，z值为1(表示设备厨余竖直状态)。
+		//如果设备向右倾斜，x值会减小;反之，向左倾斜，x值会增大。
+		//类似地，如果设备向原理用户的方向倾斜，y值会减少，向接近用户的方向倾斜，y值会增大。
+		//z轴检测垂直加速度度，1表示静止不动，在设备移动时值会减少。
+		window.addEventListener("MozOrientation",function(event){
+			var output=document.getElementById("output");
+			output.innerHTML="X="+event.x+"Y="+event.y+"Z="+event.z;
+		},false);
+		
+		//只有带加速计的设备才支持MozOrientation事件，包括Macbook、Lenovo Thinkpad、Windows Mobile和Android设备，这是一个实验性API，将来可能会变(被其他事件取代)
+		
+	//3.deviceorientation事件
+		//本质上，DeviceOrientation Event规范定义的deviceorientation事件与MozOrientation事件类似。
+		//它也是在加速计检测到设备方向变化时在window对象上触发，而且具有与MozOrientation事件相同的支持限制。
+		//不过，deviceorientation事件的意图是告诉卡法人员设备在空间中朝向哪儿，而不是如何移动
+		
+		//设备在三维空间中是靠x,y和z轴定位的。
+		//当设备静止放在水平表面上时，这三个值都是0。x轴方向是从左往右，y轴方向是从下往上，z轴方向是从后往前
+		//如p397图13-11所示
+		
+		//触发deviceorientation事件时，事件对象中包含着每个周相对于设备静止状态下发生变化的信息。
+		//事件对象包含以下5属性。
+		//alpha:在围绕z轴旋转时(即左右旋转时)，y轴的度数差;是一个介于0到360之间的浮点数
+		//beta:在围绕x轴旋转时(即前后旋转时)，z轴的度数差;是一个介于-180到180之间的浮点数
+		//gamma:在围绕y轴旋转时(即扭转设备时)，z轴的度数差;是一个介于-90和90之间的浮点数
+		//absolute:布尔值，表示设备是否返回一个绝对值
+		//compassCalibrated:布尔值，表示设备的指南针是否校准过。
+		window.addEventListener("deviceorientation",function(event){
+			var output=document.getElementById("output2");
+			output.innerHTML="Alpha="+event.alpha+", Beta="+event.beta+", Gamma="+event.gamma;
+		},false);
+		//通过这些信息，可以相应设备的方向，重新排列或修改屏幕上的元素。要响应设备方向的改变而旋转元素，可以参考以下代码
+		window.addEventListener("deviceorientation",function(event){
+			var arrow=document.getElementById("arrow");
+			arrow.style.transform="rotate(perspective(300px) "+Math.round(evet.alpha)+"deg)";	
+		},false);
+		
+		//元素"arrow"会随着event.alpha值的变化而旋转，给人一种指南针的感觉。为了保证旋转平滑，这里的CSS3转换使用了舍入之后的值
+		//到2011年，支持deviceorientation事件的浏览器有iOS4.2+中的Safari、Chrome和Android版Webkit
+	
+	//4.devicemtion事件		p398
+		//DeviceOrientation Event规范还定义了一个devicemotion事件。
+		//这个事件是要告诉开发人员设备什么时候移动，而不仅仅是设备方向如何改变。
+		//例如，通过devicemotion能够检测到设备是不是正在往下掉，或者是不是被走着的人拿在手里
+		
+		//触发devicemotion事件时，事件对象包含以下属性:
+			//1.acceleration:一个包含x、y和z属性的对象，在不考虑重力的情况下，告诉你在每个方向上的加速度
+			//2.accelerationIncludingGravity:一个包含x、y和z的属性的对象，在考虑z轴自然重力加速度的情况下，告诉你在每个方向上的加速度
+			//3.interval:以毫秒表示的时间值，必须在另一个devicemotion事件触发前传入。这个值在每个事件中应该是一个常量
+			//4.rotationRate:一个包含表示方向的alpha、beta和gamma属性的对象
+		//如果读取不到acceleration、accelerationIncludingGravity和rotationRate值，则他们的值为null
+		//因此，在使用这三个属性之前，应该先检测确定他们的值是不是null。
+		window.addEventListener("devicemotion",function(event){
+			var output=document.getElementById("output3");
+			if(event.rotationRate !== null){
+				output.innerHTML="Alpha="+event.rotationRate.alpha+", Beta="+event.rotationRate.beta+", Gamma="+event.rotationRate.gamma;
+			}
+		},false);
+		
+		//与deviceorientation事件类似，只有IOS4.2+中的Safari、Chrome和Android版WebKit实现了devicemotion事件
+	</script>
+	</body>
+</html>

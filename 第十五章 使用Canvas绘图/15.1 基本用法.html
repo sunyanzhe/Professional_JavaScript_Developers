@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>15.1基本用法</title>
+	</head>
+	<body>
+		<canvas id="drawing" width='200' height="200">A drawing of somethings</canvas>
+		<script>
+			//不用说，HTML5添加的最受欢迎的功能就是<canvas>元素。
+			//这个元素负责在页面中设定一个区域，然后就可以通过JavaScript动态地在这个区域中绘制图形
+			//<canvas>元素是由苹果公司推出的，当时主要用于Dashboard微件中。
+			//很快，HTML5加入了这个元素，主流浏览器也迅速开始支持它。
+			//IE9+、Firefox1.5+、Safari2、Opera9+、Chrome、IOS版Safari以及Android版Webkit都在某种程度上支持<canvas>
+			
+			//与浏览器环境中其他组件类似，<canvas>有几组API构成，但并非所有浏览器都支持所有这些API。
+			//除了具备基本绘图能力的2D上下文，<canvas>还建议了一个名为WebGL的3D上下文。
+			//目前，支持该元素的浏览器都支持2D上下文及文本API，但对WebGL的支持还不够好。
+			//由于WebGL还是实验性的，因此要得到所有浏览器支持需要很长一段时间。
+			//Firefox4+和Chrome支持WebGL规范的早期版本，但一些老版本的操作系统，比如Windows XP，由于缺少必要的绘图驱动程序，即便安装了这两款浏览器也无济于事。
+		
+		//15.1基本用法			p445
+			//要使用<canvas>元素，必须先设置其width和height属性，指定可以绘图的区域大小。
+			//出现在开始和结束标签中的内容是后备信息，如果浏览器不支持<canvas>元素，就会显示这些信息。
+			//下面就是<canvas>元素的例子
+			
+			//<canvas id="drawing" width='200' height="200">A drawing of somethings</canvas>
+			
+			//与其他元素一样，<canvas>元素对应的DOM元素对象也有width和height属性，可以随意修改。
+			//而且，也能通过CSS为该元素添加样式，如果不添加任何样式或者不绘制任何图形，在页面中是看不到元素的。
+			
+			//要在这块画布(canvas)上绘图，需要取得绘图上下文。
+			//而取得绘图上下文对象的引用，需要调用getContext()方法并传入上下文的名字。
+			//传入"2d"，就可以取得2D上下文
+			
+			var drawing=document.getElementById("drawing");
+			
+			//确定浏览器支持<canvas>元素
+			if(drawing.getContext){
+				var context=drawing.getContext("2d");
+				//更多代码
+			}
+			
+			//在使用<canvas>元素之前，首先要检测getContext()方法是否存在，这一步非常总要。
+			//有些浏览器会为HTML规范之外的元素创建默认的HTML元素对象。
+			//在这种情况下，即使drawing变量中保存着一个有效的元素引用，也检测不到getContext()方法
+			
+			//使用toDataURL()方法，可以导出在<canvas>元素上绘制的图像。
+			//这个方法接收一个参数，即图像的MIME类型格式，而且适合用于创建图像的任何上下文。
+			//比如，要取得画布中的一幅PNG格式的图像，可以使用下列代码
+			if(drawing.getContext){
+				//取得图像的数据URI
+				imgURI=drawing.toDataURL("img/png");
+				//显示图像
+				var img=document.createElement("img");
+				img.src=imgURI;
+				document.body.appendChild(img);
+			}
+			
+			//默认情况下，浏览器会将图像编码为PNG格式(除非另行指定)。
+			//Firefox和Opera也支持基于"image/jpeg"参数的JPEG编码格式。
+			//由于这个方法是后来才追加的，所以支持<canvas>的浏览器也是在较新的版本中才加入了对它的支持，比如IE9、Firefox3.5和Opera10
+			
+			//如果会知道画布上的图像源自不同的域，toDataURL方法会抛出错误。
+		</script>
+	</body>
+</html>

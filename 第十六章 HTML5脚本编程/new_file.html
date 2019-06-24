@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<canvas id="mycanvas" width="200" height="200"></canvas>
+		<script>
+			var canvas=document.getElementById("mycanvas");
+			var ctx=canvas.getContext("2d");
+			ctx.fillStyle="red";
+			ctx.fillRect(0,0,100,100);
+			window.addEventListener("message",function(event){
+				alert(1);
+			},false);
+		</script>
+	</body>
+</html>

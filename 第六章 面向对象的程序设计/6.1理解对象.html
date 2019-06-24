@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<script>
+			//ECMA-262把对象定义为:"无序属性的集合，其属性可以包含基本值、对象或函数"。
+			//严格来讲，这就相当与说对象是一组没有特定顺序的值。对象的每个属性或方法都有一个名字，而每个名字都映射到一个值
+			//正因为这样，我们可以吧ECMAScript对象想象成散列表:就是一组名值对，其中的值是数据或函数。
+			//每个对象都是基于一个引用类型创建的，这个引用类型可以是第5章讨论的原生类型，也可以是开发人员定义的类型
+			
+			//6.1理解对象
+			//创建自定义对象的最简单的方法就是创建一个Object实例，然后在添加属性和方法
+			var person={
+				name:"Nicholas",
+				age:29,
+				job:"Software Engineer",
+				sayName:function(){
+					alert(this.name);
+				}
+			};
+			//6.1.1属性类型	p139
+			//ECMA-262第5版在定义只有内部才用的特性(attribute)时,描述了属性(property)的各种特征
+			//ECMA-262定义这些特性是为了实现JavaScript引擎用的，因此在JavaScript中不能直接访问它们。
+			//为了表示特性是内部值，该规范把它们放到了两对方括号中,例如[[Enumberable]]。
+			//ECMAScript中有两种属性:数据属性和访问属性
+			//1.数据属性
+			  //[[configurable]]：表示能否通过delete删除属性从而重新定义属性，能否修改属性的特性，或者能否把属性修改为访问器属性。
+			  //  				    直接在对象上定义的属性，它们的这个特性默认值为true
+			  //[[Enumberable]]：表示能否通过for-in循环返回属性。直接在对象上定义的属性，它们的这个特性默认为true
+			  //[[Writable]]:表示能否修改属性的值。直接在对象定义的属性，它们的这个特性默认为true。
+			  //[[Value]]:包含这个属性的数据值。读取属性值的时候，从这个位置开始读；写入属性值的时候，把新值保存在这个位置。这个特性的默认值为undefined
+			  //要修改属性的默认特性，必须使用ECMAScript5的Object.defineProperty()方法。
+			  //这个方法接受三个参数:属性所在的对象，属性的名字和一个描述符对象。
+			  //其中，描述符(descriptor)对象的属性必须是:configurable,Enumberable,Writable,Value。设置其中的一或多个值，可以修改对应的特性值
+			  
+			  var person1={};
+			  Object.defineProperty(person1,"name",{
+			  	writable:false,
+			  	value:"Nicholas"
+			  });
+			  console.log(person1.name);	//Nicholas
+			  person1.name="Greg";
+			  console.log(person1.name);	//Nicholas
+			  //这个例子创建了一个名为name的属性，它的值"Nicholas"是只读的。
+			  //这个属性的值是不可修改的，如果尝试为它指定新值，则在非严格模式下，赋值操作将会导致抛出错误
+			  //类似的规则也适用与不可配置的属性。
+			  
+			  var person2={};
+			  Object.defineProperty(person2,"name",{
+			  	configurable:false,
+			  	value:"Nicholas"
+			  });
+			  console.log(person2.name);
+			  delete person2.name;
+			  console.log(person2.name);
+			  //把configurable设置为false，表示不能从对象中删除属性。
+			  //如果对这个属性调用delete，在非严格模式下什么也不会发生，而在严格模式下会导致错误。
+			  //而且，一旦把属性定义为不可配置的，就不能再把它变成可配置的了。
+			  //此时，再调用Object.defineProperty()方法修改除writable之外的特性，就会导致错误
+			  
+//			  Object.defineProperty(person2,"name",{
+//			  	configurable:true,
+//			  	value:"Nicholas"
+//			  }) 报错
+			  //也就是说，可以多次调用Object.defineProperty()方法修改同一个属性，但在把configurable特性设置为false之后就有限制了
+			  //在调用Object.defineProperty()方法创建一个新的属性时，如果不指定，configurable、enumberable和writable的特性的默认值都是false。
+			  //如果调用Object.defineProperty()方法只是修改已定义的属性和特性，则没有限制。
+			  //多数情况下没有必要利用Object.defineProperty()方法提供的这些高级功能。不过，理解这些概念对理解javaScript对象非常有用
+			  
+			 //2.访问器属性
+			   //访问器属性不包含数据值；它们包含一对儿getter和setter函数(这两个都不是必需的)
+			   //在读取访问器属性时，会调用getter函数，这个函数负责返回有效的值；在写入访问器属性时，会调用setter函数并传入新值，这个函数负责决定如何处理数据。
+			   //访问器属性有如下四个特性
+			   //[[Configurable]]:表示能否通过delete删除属性从而重新定义属性，能否修改属性的特性，或者能否把属性修改为数据属性。对于直接在对象上定义的属性这个特性默认为true
+			   //[[Enumberable]]:表示能否通过for-in循环返回属性。对于直接在对象上定义的属性，这个特性默认为true
+			   //[[Get]]:在读取属性时调用的函数。默认是undefined
+			   //[[Set]]:在写入属性时调用的函数。默认是undefined
+			   //访问器属性不能直接定义，必须使用Object.defineProperty()来定义。
+			   	var book={
+			   		_year:2004,
+			   		edition:1
+			   	};
+			  	Object.defineProperty(book,"year",{
+			   		get:function(){
+			   			return this._year;
+			   		},
+			   		set:function(newValue){
+			   			if(newValue>2004){
+			   				this._year=newValue;
+			   				this.edition+=newValue-2004;
+			   			}
+			   		}
+			   	});
+			   	book.year=2005;
+			   	console.log(book.edition);//2
+			   	//_year前面的下划线是一种常用的记号，表示只能通过对象方法访问的属性。
+			   	//而访问器属性year则包含一个getter则包含一个getter函数和一个setter函数
+			   	//getter函数通过计算来确定正确的版本。因此把year属性修改为2005会导致_year变成2005，而edition变为2.
+			   	//这是使用访问器属性的常见方式，即设置一个属性的值导致其他属性发生变化。
+			   	//不一定非要同时制定setter和getter。只制定getter意味着属性不能写，尝试写入属性会被忽略，严格模式下会报错
+			   	//而只设定了setter函数的属性不能读，在非严格模式下会显示undefined，在严格模式下会抛出错误。
+			   	
+			//6.1.2定义多个属性		p142
+				//由于为对象定义多个属性的可能性很大，ECMAScript5又定义了一个Object.defineProperties()方法。
+				//利用这个方法可以通过描述符一次定义多个属性。这个方法接收两个对象参数
+				//第一个对象是要添加和修改其属性的对象，第二个对象的属性与第一个对象中要添加或修改的属性一一对应
+				
+				var book={};
+				Object.defineProperties(book,{
+					_year:{
+						configurable:true,
+						writable:true,
+						value:2004
+					},
+					edition:{
+						writable:true,
+						value:1
+					},
+					year:{
+						get:function(){
+							return this._year;
+						},
+						set:function(newValue){
+							if(newValue>2004){
+			   					this._year=newValue;
+			   					this.edition+=newValue-2004;
+			   				}
+						}
+					}
+				});
+				//以上代码在book对象上定义了两个数据属性(_year和edition)和一个访问属性(year)。最终的对象与上一节定义的对象相同，唯一的区别就是这里的属性都是同一时间创建的
+			
+			//6.1.3读取属性的特性		p143
+			//使用ECMAScript5的Object.getOwnPropertyDescriptor()方法，可以取得给定属性的描述符。
+			//这个方法接受两个参数:属性所在的对象和要读取其描述符的属性名称。
+			//返回值是一个对象，如果是数据属性，这个对象的属性有configurable、enumberable、writable和value；
+			//如果是访问器属性，这个对象的属性有configurable、Enumberable、set和get。
+			
+			var descriptor1=Object.getOwnPropertyDescriptor(book,"_year");
+			var descriptor2=Object.getOwnPropertyDescriptor(book,"year");
+			console.log(descriptor1);	
+			console.log(descriptor2);	
+			//在JavaScript中，可以对任何对象————包括DOM和BOM对象，使用Object.getOwnPropertyDescriptor()方法
+			
+		</script>
+	</body>
+</html>

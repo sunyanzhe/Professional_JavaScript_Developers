@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<script>
+			alert(true&&NaN)
+			//1.逻辑非
+			//逻辑非操作符由一个叹号！表示,可以应用于ECMAScript中的任何值，无论这个只是什么数据类型,这个操作符都会返回一个布尔值.逻辑非首先会将它的操作数转换为一个布尔值,然后在对其求反.
+			//如果操作数是一个对象，返回false;
+			//如果操作数是一个空字符串，返回true
+			//如果操作数是一个非空字符串，返回false；
+			//如果操作数是数值0，返回true
+			//如果操作数是任意非0数值（Infinity）,返回false；
+			//如果操作数是null，返回true
+			//如果操作数是NaN，返回true
+			//如果操作数是undefined，返回true
+			console.log(!false);
+			console.log(!"blue");
+			console.log(!"");
+			console.log(!0);
+			console.log(!NaN);
+			console.log(!12345);
+			
+			//2.逻辑与
+			//逻辑与操作符由两个和号&&表示,有两个操作数
+			//逻辑与操作可以应用于任何类型的操作数,而不仅仅是布尔值。在有一个操作数不是布尔值的状况下,逻辑与操作就不一定返回布尔值;
+			//如果第一个操作数是对象,则返回第二个操作数;
+			//如果第二个操作数是对象,则只有第一个操作数的求值结果为true的状况下才会返回该对象;
+			//如果两个操作数都是对象,则返回第二个操作数;
+			//如果第一个操作数是null,则返回null;
+			//如果第一个操作数是NaN,则返回NaN;
+			//如果第一个操作数是undefined,则返回undefined;
+			//逻辑与操作符属于短路操作，即如果第一个操作数能决定结果，那么就不会再说第二个操作数求职。对于逻辑与操作符而言,如果第一个操作数是false,则无论第二个操作数是什么值,结果都不可能再是true了。
+			
+			//3.逻辑或
+			//逻辑或操作符由两个竖线符号||表示，有两个操作数
+			//如果第一个操作数是对象，则返回第一个操作数；
+			//如果第一个操作数求值结果为false；则返回第二个操作数;
+			//如果两个操作数都是对象,则返回第一个操作数；
+			//如果两个操作数都是null,则返回null
+			//如果两个操作数都是NaN,则返回NaN
+			//如果两个操作数都是undefined,则返回undefined;
+			//逻辑或也属于短路操作，当第一操作数是true,就不会对第二个操作数求值了
+			//例: var myObject = preferredObject || backupObject
+			//变量myObject将被赋予等号后面两个值中的一个,变量preferredObject中包含优先赋给变量myObject的值,变量backupObject负责在preferredObject中不包含有效值的情况下提供后备值
+			
+			
+			
+		</script>
+	</body>
+</html>

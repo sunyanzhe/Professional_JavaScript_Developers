@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<script>
+			console.log(Math.random().toFixed(1));
+			function randomNumber(a){
+				var c=[],m;
+				if(a>=1.67&&a<=1.75){
+					for (var i=0;i<12;i++) {
+						m=Math.floor(Math.random()*((a-1.66)*100*5))+360+parseFloat(Math.random().toFixed(1));
+						c[c.length]=m;				
+					}
+				}else if(a>1.75&&a<1.87){
+					c=[];
+				}else if(a>=1.87&&a<=1.95){
+					for (var i=0;i<12;i++) {
+						m=Math.floor(Math.random()*((a-1.86)*100*5))+400+parseFloat(Math.random().toFixed(1));
+						c[c.length]=m;				
+					}
+				}
+				var d=c.map(function(item,index,array){
+					return item/2;
+				})
+				console.log(c,d);
+			}
+			randomNumber(1.76);
+		</script>
+	</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <input type="file" name="files-list" id="files-list" />
+    <div id="progress"></div>
+    <div id="output"></div>
+    <div id="droptarget" style="width: 400px;height: 400px;border:1px solid #000"></div>
+    <script>
+        //25.4 File API p689
+            //File API在表单中的文件输入字段的基础上，又添加了一些直接访问文件信息的接口。
+            //HTML5在DOM中为文件输入元素添加了一个files集合。
+            //在通过文件输入字段选择了一或多个文件时，files集合中将包含一组File对象，每个File对象应对着一个文件。
+            //每个File对象都有下列只读属性
+            //name:本地文件系统中的文件名
+            //size:文件的字节大小
+            //type:字符串，文件的MIME类型
+            //lastModifiedDate:字符串，文件上一次被修改的时间(只有Chrome实现了这个属性)
+
+            //举个例子，通过侦听change事件并读取files集合就可以知道选择的每个文件的信息
+            // var filesList=document.getElementById("files-list");
+            // filesList.addEventListener("change",function(event){
+            //     var files=event.target.files,i=0,len=files.length;
+            //     while(i<len){
+            //         console.log(files[i].name+" {"+files[i].type+", "+files[i].size+" bytes) ");
+            //         i++;
+            //     }
+            // },false);
+        
+        //这个例子把每个文件的信息输入到了控制台中。仅仅这一项功能，对Web应用开发来说就已经是非常大的进步了。
+        //不过，File API的功能还不止于此，通过它提供的FileReader类型甚至还可以读取文件中的数据。
+
+        //25.4.1 FileReader类型  p690
+            //FileReader类型实现的是一种异步文件读取机制。可以把FileReader想象成XMLHttpRequest，区别只是它读取的是文件系统，而不是远程服务器。
+            
+            //为了读取文件中的数据，FileReader提供了如下几个方法
+                //1.readAsText(file,encoding):以纯文本形式读取文件，将读取到的文本保存在result属性中。第二个参数用于指定编码类型，是可选的
+                //2.readAsDataURL(file):读取文件并将文件以数据URI的形式保存在了result属性中
+                //3.readAsBinaryString(file):读取文件并将一个字符串保存在result属性中，字符串中的每个字符表示一字节
+                //4.readAsArrayBuffer(file):读取文件并将一个包含文件内容的ArrayBuffer保存在result属性中
+
+            //这些读取文件的方法为灵活地处理文件数据提供了极大便利。
+            //例如可以读取图像文件并将其保存为数据URI，一边讲其显示给用户，或者为了解析方便，可以将文件读取为文本形式。
+            //由于读取过程是异步的，因此FileReader也提供了几个事件
+            //其中最有用的三个事件是progress、error和load，分别表示是否又读取了新数据、是否发生了错误以及是否已经读完了整个文件
+            //每过50ms左右，就会触发一次progress事件，通过事件对象可以获得与XHR的progress事件相同的信息(属性)：lengthComputable、loaded和total。
+            //另外，尽管可能没有包含全部数据，但每次progress事件中都可以通过FileReader的result属性读取到文件内容。
+
+            //由于种种原因无法读取文件，就会触发error事件。
+            //触发error事件时，相关的信息将保存到FileReader的error属性中。
+            //这个属性中将保存一个对象，该对象只有一个属性code，即错误码。
+            //在这个错误码是1表示未找到文件，是2表示安全性错误，是3表示读取中断，是4表示文件不可读，是5表示编码错误。
+
+            //文件成功加载后会触发load事件；如果发生了error事件，就不会发生load事件。
+            var filesList=document.getElementById("files-list");
+                filesList.addEventListener("change",function(event){
+                    var info="",output=document.getElementById("output"),progress=document.getElementById("progress"),file=event.target.files,type="default",reader=new FileReader();
+                    if(/image/.test(file[0].type)){
+                        reader.readAsDataURL(file[0]);
+                        type="image";
+                    }else{
+                        reader.readAsText(file[0]);
+                        type="text";
+                    }
+                    
+                    reader.onprogress=function(event){
+                        if(event.lengthComputable){
+                            progress.innerHTML=event.loaded+"/"+event.total;
+                        }
+                    };
+
+                    reader.onerror=function(){
+                        output.innerHTML=reader.error.code
+                    };
+                    reader.onload=function(){
+                        var html="";
+                        switch (type){
+                            case "image":
+                                html="<img src='"+reader.result+"'>";
+                                break;
+                            case "text":
+                                html=reader.result;
+                                break;
+                        }
+                        output.innerHTML=html;
+                    };
+                },false);
+
+        //25.4.4读取拖放文件        p694
+            //围绕读取文件信息，结合使用HTML5拖放API和文件API，能够穿高出令人瞩目的用户界面：在页面上创建了自定义的放置目标之后，你可以从做面上把文件拖放到该目标。
+            //与拖放一张图片或者链接类似，从桌面上把文件拖放到浏览器也会触发drop事件。
+            //而且可以在event.dataTransfer.files中读取到被放置的文件，当然此时他是一个File对象，与通过文件传入字段取得的File对象一样。
+            //下面这个例子会将放置到页面中自定义的放置目标中的文件信息显示出来。
+            var droptarget=document.getElementById("droptarget");
+            function handleEvent(event){
+                var info="",output=document.getElementById("output"),files,i,len;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if(event.type=="drop"){
+                        files=event.dataTransfer.files;
+                        len=files.length;
+                        for(i=0;i<len;i++){
+                            info+=files[i].name+" ("+files[i].type+" , "+files[i].size+"bytes) <br />"
+                        }
+                    }
+                output.innerHTML=info;
+            }
+            droptarget.addEventListener("dragenter",handleEvent,false);
+            droptarget.addEventListener("dragover",handleEvent,false);
+            droptarget.addEventListener("drop",handleEvent,false);
+    </script>
+</body>
+</html>

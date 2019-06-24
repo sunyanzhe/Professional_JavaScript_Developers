@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>7.4私有变量</title>
+		
+	</head>
+	<body>
+		<script>
+		//7.4私有变量		p186
+			//严格来讲，JavaScript中没有私有成员的概念；所有对象属性都是公有的。不过，倒是有一个私有变量的概念。
+			//任何哎函数中定义的变量，都可以认为是私有变量，因为不能再函数的外部访问这些变量。
+			//私有变量包括函数的参数、局部变量和在函数内部定义的其他函数。
+			function add(num1,num2){
+				var sum=num1+num2;
+				return sum;
+			}
+			//在这个函数内部，有3个私有变量:num1,num2和sum。在函数内部可以访问这几个变量，但在函数外部则不能访问它们。
+			//如果在这个函数内部创建一个闭包，那么闭包通过自己的作用域链也可以访问这些变量。
+			//利用这一点，就可以创建用于访问私有变量的公有办法。
+			
+			//我们把有圈访问私有变量和私有函数的方法称为特权方法(privileged method)。
+			//有两种在对象上创建特权方法的方式。
+			//第一种是构造函数中定义特权方法，模式如下
+			function MyObject(){
+				
+				//私有变量和私有函数
+				var privateVariable=10;
+				
+				function privateFunction(){
+					return false;
+				}
+				
+				//特权方法
+				this.publicMethod=function(){
+					privateVariable++;
+					return privateFunction();
+				};
+			}
+			
+			//这个模式在构造函数内部定义了所有私有变量和函数。然后，又继续创建了能够访问这些私有成员的特权方法。
+			//能够在构造函数中定义特权方法，是因为特权方法作为闭包有权访问在构造函数中定义的所有变量和函数。
+			//对于这个例子而言，变量privateVariable和函数privateFunction()只能通过特权方法publicMethod()来访问。
+			//在创建MyObject的实例后，除了使用publicMethod()这一个途径外，没有任何办法可以直接访问privateVariable和privateFunction()。
+			
+			//利用私有和特权成员，可以隐藏那些不应该被直接修改的数据，例如：
+			function Person(name){
+				this.getName=function(){
+					return name
+				};
+				this.setName=function(value){
+					name=value;
+				};
+			}
+			var person1=new Person("Nicholas");
+			console.log(person1.getName());
+			person1.setName("sun");
+			console.log(person1.getName());
+			
+			//以上代码的构造函数中定义了两个特权方法:getName()和setName()。
+			//这两个方法都可以在构造函数外部使用，而且都有权访问私有变量name。
+			//但在Person构造函数内外部，没有任何办法访问name。
+			//由于这两个方法是在构造函数内部定义的，他们作为闭包能够作用域链访问name。
+			//私有变量name在Person的每一个实例中都不相同，因为每次调用构造函数都会重新创建这两个方法。
+			//不过，在构造函数中定义特权方法也有一个缺点，那就是必须使用构造函数模式来打到这个目的。
+			//构造函数模式的缺点是针对每个实力都会创建同样一组新方法，而使用静态私有变量实现特权方法就可以避免这个问题。
+			
+		//7.4.1静态私有变量		p188
+			//通过在私有作用域中定义私有变量或函数，同样也可以创建特权方法，其基本模式如下所示。
+			(function(){
+				//私有变量和私有函数
+				var privatVateVariable=10;
+				
+				function privateFunction(){
+					return false;
+				}
+				
+				//构造函数
+				MyObject=function(){};
+				
+				//公有/特权方法
+				MyObject.prototype.publicMethod=function(){
+					privateVariable++;
+					return privateFunction();
+				};
+			})();
+			
+			//这个模式创建了一个私有作用域，并在其中封装了一个构造函数及相应的方法。
+			//在私有作用域中，首先定义了私有变量和私有函数，然后又定义了构造函数及其公有方法。
+			//公有方法是在原型上定义的，这一点体现了经典的原型模式。
+			//需要注意的是，这个模式在定义构造函数时并没有使用函数声明，而是使用了函数表达式。
+			//函数声明只能创建局部函数，但那并不我们想要的。出于同样的理由，也没有在声明MyObject时使用var关键字。
+			//初始化未经声明的变量，总会创建一个全局变量。因此，MyObject就成了一个全局变量，能够在私有作用域之外被访问到。
+			//但在严格模式下给未经声明的变量复制会导致错误
+			
+			//这个模式与在构造函数中定义特权方法的主要区别，就在于私有变量和函数是由实例共享的。
+			//由于特权方法是在原型上定义的，因此所有实例都是用同一个函数。
+			//而这个特权方法，作为一个闭包，总是保存着对包含作用域的引用
+			(function(){
+				var name="";
+				
+				Person1=function(value){
+					name=value;
+				};
+				
+				Person1.prototype.getName=function(){
+					return name;
+				};
+				Person1.prototype.setName=function(value){
+					name=value;
+				};
+			})();
+			
+			var person2=new Person1("Nicholas");
+			console.log(person2.getName());		//Nicholas
+			person2.setName("Greg");
+			console.log(person2.getName());		//Greg
+			
+			var person3=new Person1("Micheal");
+			console.log(person2.getName());		//Micheal
+			console.log(person3.getName());		//Micheal
+			
+			//这个例子中Person构造函数与getName()和setName()方法一样，都有权访问私有变量name。
+			//在这种模式下，变量name就变成了一个静态的、由所有实例共享的属性。
+			//也就是说，在一个实例上调用setName()会影响所有实例。而调用setName()或新建一个Person实例都会赋予name属性一个新值。
+			//结果就是所有实例都会返回相同的值。
+			//以这种方式创建静态私有变量会因为使用原型而增进代码复用，但每个实例都没有自己的私有变量。
+			//到底是使用实例变量，还是静态私有变量，最终还是要视具体需求而定。
+			
+			//多查找作用域链中的一个层次，就会在一定程度上影响查找速度。而这正是使用闭包和私有变量的一个明显的不足之处
+			
+		//7.4.2模块模式		p189
+			//前面的模式是用于为自定义类型创建私有变量和特权方法的。而道格拉斯所说的模块模式(module pattern)则是为单例创建私有变量和特权的方法。
+			//所谓单例(singleton)，指的就是只有一个实例的对象。按照惯例，JavaScript是以对象字面量的方式创建单例对象的。
+			
+			var sigleton={
+				name:"value",
+				method:function(){
+					return true;
+				}
+			}
+			//模块模式通过为单例添加私有变量和特权方法能够使其得到增强
+			var singleton=function(){
+				//私有变量和私有函数
+				var parivateVariable=10;
+				
+				function privateFunction(){
+					return false;
+				}
+				
+				//特权/公有方法和属性
+				return{
+					publicProperty:true,
+					publicMethod:function(){
+						parivateVariable++;
+						return privateFunction();
+					}
+				};
+			}();
+			console.log(singleton);
+			
+			//这个模块模式使用了一个返回对象的匿名函数。在这个匿名函数内部，首先定义了私有变量和函数。
+			//然后，将一个对象字面量作为函数的值返回。返回的对象字面量只包含可以公开的属性和方法。
+			//由于这个对象是在匿名函数内部定义的，因此它的公有方法有权访问私有变量和函数。
+			//从本质上来讲，这个对象字面量定义的是单例的公共接口。这个模式在需要对单例进行某些初始化，同时又需要维护其私有变量时非常有用。
+			function BaseComponent(){};
+			var application=function(){
+				//私有变量和函数
+				var components=new Array();
+				
+				//初始化
+				components.push(new BaseComponent());
+				
+				//公共
+				return{
+					getComponentCount:function(){
+						return components.length;
+					},
+					
+					registerComponent:function(component){
+						if (typeof component=="object"){
+							components.push(component);
+						}
+					}
+				};
+			}();
+			//在Web应用程序中，经常需要使用一个单例来管理应用程序的信息。这个简单的例子创建了一个用于管理组件的application对象。
+			//在创建这个对象的过程中，首先声明了一个私有的components数组，并向数组添加了一个BaseComponent的新实例(在这里不需要关心BaseComponent的代码，知识用它展示初始化参数)
+			//而放回对象的getComponentCount()和registerComponent()方法，都是有权访问数组components的特权方法。前者知识返回以注册的数组数目，后者用于注册新组件。
+			
+			//简言之，结果必须创建一个对象并以某些数据对其进行初始化，同时还要公开一些能够访问这些私有数据的方法，那么就可以使用模块模式。
+			//以这种模式创建的每个单例都是Object的实例，因为最终要通过一个对象字面量来表示它。
+			//事实上，这也没有什么；毕竟，单例通常都是作为全局对象存在的，我们不会将它传递给一个函数。
+			//因此，也就没什么必要使用instanceof操作符来检查其对象类型了
+		
+		//7.4.3增强的模块模式			p191
+			//有人进一步改进了模块模式，即在返回对象之前假如对其增强的代码。
+			//这种增强的模块模式适合那些单例必须是某种类型的实例，同时还必须添加某些属性和(或)方法对其加以增强的情况。
+			//例子:
+			
+			var singleton=function(){
+				//私有变量和私有函数
+				var privateVariable=10;
+				
+				function privateFunction(){
+					return false;
+				}
+				
+				function CustomType(){};
+				//创建对象
+				var object=new CustomType();
+				
+				//添加特权/公有属性和方法
+				object.publicProperty=true;
+				
+				object.publicMethod=function(){
+					privateVariable++;
+					return privateFunction();
+				};
+				return function
+			}();
+			
+			//如果前面演示模块模式的例子中applivation对象必须是BaseComponent的实例，那么就可以使用以下代码
+			var application=function(){
+				//私有变量和函数
+				var components=new Array();
+				
+				//初始化
+				components.push(new BaseComponent());
+				
+				//创建application的一个局部副本
+				var app=new BaseComponent();
+				
+				//公共接口
+				app.getComponentCount=function(){
+					return components.length;
+				;}
+				app.registerComponent=function(component){
+					if(typeof component=="object"){
+						components.push(component);
+					}
+				};
+				//返回对象
+				return app;
+			}();
+		</script>
+	</body>
+</html>

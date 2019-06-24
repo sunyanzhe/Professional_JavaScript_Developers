@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<img id="pic" src="img1.jpg" alt="pic" />
+		<script>
+			function change(img){
+				var oldsrc=img.src;
+				var gerysrc=gery(img);
+				img.addEventListener("mouseover",function(event){
+					this.src=oldsrc;
+				},false);
+				img.addEventListener("mouseout",function(event){
+					this.src=gerysrc;
+				},false);
+				img.src=gerysrc;				
+			}
+			function gery(img){
+				var canvas=document.createElement("canvas");
+				canvas.width=img.width;
+				canvas.height=img.height;
+				var ctx=canvas.getContext("2d");
+				ctx.drawImage(img,0,0);
+				var imgData=ctx.getImageData(0,0,img.width,img.height);
+				var data=imgData.data;
+				for(var i=0;i<data.length;i+=4){
+					data[i]=data[i+1]=data[i+2]=Math.floor((data[i]+data[i+1]+data[i+2])/3);
+				}
+				ctx.putImageData(imgData,0,0);
+				return canvas.toDataURL();
+			}
+			window.onload=function(){
+				change(document.getElementById("pic"))
+			}
+			
+		</script>
+	</body>
+	
+</html>

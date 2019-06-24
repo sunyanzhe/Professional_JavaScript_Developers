@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>15.3 WebGL</title>
+	</head>
+	<body>
+		<canvas id="drawing" width="200" height="200"></canvas>
+		<script>
+			//WebGL是针对Canvas的3D上下文。与其他Web技术不同，WebGL并不是W3C制定的标准，而是有Khronos Group制定的。
+			//其官方网站是这样介绍的："Khronos Group是一个非盈利的由会员自主的协会，专注于为并行计算以及各种平台和设备上的图形及动态媒体指定无版税的开放标准"
+			//Khronos Group也设计了其他图形处理API，比如OpenGL ES2.0.
+			//浏览器中使用了WebGL就是基于OpenGL ES2.0制定的
+			
+			//OpenGL等3D图形语言是非常复杂的，本书不可能介绍其中每一个概念。
+			//熟悉OpenGL ES2.0的读者可能会觉得WebGL更好理解一些，因为很多概念是相通的。
+			
+			//本节将适当地介绍OpenGL ES2.0的一些概念，尽力解释其中的某些部分在WebGL中的实现。
+			//要全面了解OpenGL，请访问www.opengl.org。
+			//要全面学习WebGL，请参考www.learningwebgl.com，其中包含非常棒的系列教程
+			
+		//15.3.1类型化数组
+			//WebGL涉及的复杂计算需要提前知道数值的精度，而标准的JavaScript数值无法满足需要
+			//为此，WebGL引入了一个概念，叫做类型化数组(typed arrays)。
+			//类型化数组也是数组，只不过其元素被设置为特定类型的值。
+			//类型化数组的核心就是一个名为ArrayBuffer的类型。
+			//每个ArrayBuffer对象表示的只是内存中指定的字节数，但不会指定这些字节用于保存什么类型的数据。
+			//通过ArraBuffer所能做的，就是为了将来使用而分配一定数量的字节。
+			//例如，下面这行代码会在内存中分配20B
+			
+			var buffer=new ArrayBuffer(20);
+			console.log(buffer);
+			
+			//创建了ArrayBuffer对象后，能够通过该对象获得的信息只有他包含的字节数，方法时访问其byteLength属性：
+			var bytes=buffer.byteLength;
+			console.log(bytes);
+			
+			//虽然ArrayBuffer对象本身没有多少可说的，但对WebGL而言，使用它是极其重要的。而且，在涉及视图的时候，你才发现他原本还是很有意思的。
+			
+		//1.视图			p464
+			//使用ArrayBuffer(数组缓冲器类型)的一种特别的方式就是用它来创建数组缓冲器视图。
+			//其中，最常见的视图就是DataView，通过它可以选择ArrayBuffer中一小段字节。
+			//为此，可以在创建DataView实例的时候传入一个ArrayBuffer、一个可选的字节偏移量(从该字节开始选择)和一个可选的要选择的字节数。
+			//例如：
+			
+			//基于整个缓冲器创建的一个新视图
+			var view = new DataView(buffer);
+			
+			//创建一个开始于字节9的新视图
+			var view = new DataView(buffer,9);
+			
+			//创建一个从字节9开始到字节18的新视图
+			var view = new DataView(buffer,9,10);
+			console.log(view);
+			//实例化之后，DataView对象会把字节偏移量以及字节长度信息分别保存在byteOffset和byteLength属性中
+			console.log(view.byteLength);
+			console.log(view.byteOffset);
+			
+			//通过这两个属性可以在以后方便地交接视图的状态。另外，通过其buffer属性也可以取得数组缓冲器。
+			//读取和写入DataView的时候，要根据实际操作的数据类型，选择相应的getter和setter方法
+			
+			//数据类型								getter									setter
+			//有符号8位整数							getInt8(byteOffset)						setInt8(byteOffset,value)
+			//无符号8位整数							getUint8(byteOffset)					setUint8(byteOffset,value)
+			//有符号16位整数							getInt16(byteOffset,littleEndian)		setInt16(byteOffset,value,littleEndian)
+			//无符号16位整数							getUint16(byteOffset,littleEndian)		setUint16(byteOffset,value,littleEndian)
+			//有符号32位整数							getInt32(byteOffset,littleEndian)		setInt32(byteOffset,value,littleEndian)
+			//无符号32位整数							getUint32(byteOffset,littleEndian)		setUint32(bteOffset,value,littleEndian)
+			//32位浮点数								getFloat(byteOffset,littleEndian)		setFloat32(byteOffset,value,littleEndian)
+			//64位浮点数								getFloat(byteOffset,littleEndian)		setFloat64(byteOffset,value,littleEndian)
+			
+			
+			//所有这些方法的第一个参数都是一个字节偏移量，表示要从那个字节开始读取或写入。
+			//不要忘了，要保存有些数据类型的数据，可能需要不知1B。
+			//比如，无符号8位整数要用1B，而32位浮点数则要用4B。
+			//使用DataView，就需要你自己来管理这些细节，即要明确知道自己的数据需要多少字节，并选择正确的读写方法。
+			//例如：
+			
+			var buffer=new ArrayBuffer(20);
+			var view=new DataView(buffer);
+			var value;
+			view.setUint16(0,25);
+			view.setUint16(2,50);//不能从字节1开始，因为16位整数要用2B
+			value=view.getUint16(2);
+			console.log(value);
+			
+			//以上代码把无符号16位整数保存到了数组缓冲器中。
+			//因为每个16位整数要用2B，所以保存第一个数的字节偏移量为0，而保存第二个数的字节偏移量为2
+			
+			//用于读写16位或更大数值的方法都有一个可选的参数littleEndian。
+			//这个参数是一个布尔值，表示读写数值时是否采用小端字节序(即将数据的最低有效位保存在低内存地址中)，而不是大端字节序(即将数据的最低有效位保存在高内存地址中)。
+			//如果你也不确定应该使用哪种字节序，那不用管它，就采用默认的大端字节序方式保存即可。
+			
+			//因为在这里使用的是字节偏移量，而非数组元素数，所以可以通过几种不同的方式来访问同一字节。
+			//例如：
+			var buffer=new ArrayBuffer(20);
+			var view=new DataView(buffer);
+			view.setUint16(0,25);
+			var value=view.getInt8(0);
+			
+			console.log(value);
+			
+			//在这个例子中，数值25以16位无符号整数的形式被写入，字节偏移量为0.
+			//然后，再以8位有符号整数的方式读取该数据，得到的效果是0
+			//这是因为25的进制形式是前8位(第一个字节)全部都是0
+			
+			//00000000     00001001
+			
+			//可见，虽然DataView能让我们在字节级别上读写数组缓冲器中的数据，但我们必须自己记住要将数据保存到哪里，需要占用多少字节。
+			//这样一来，就会带来很多工作量，因此类型化视图就应运而生。
+			
+		//2.类型化视图				p466
+			//类型化视图一般也被称为类型化数组，因为它们除了元素必须是某种特定的数据类型外，与常规的数组无异。
+			//类型化视图也分几种，而且他们都继承了DataView。
+			//1.Int8Array：表示8位二补整数
+			//2.Uint8Array：表示8位无符号整数
+			//3.Int16Array：表示16位二补整数
+			//4.Uint16Array：表示16位无符号整数
+			//5.Int32Array：表示32位二补整数
+			//6.Uint32Array：表示32位无符号整数
+			//7.Float32Array：表示32位IEEE浮点值
+			//8.Float64Array：表示64位IEEE浮点值
+			
+			//每种视图类型都以不同的方式表示数据，而统一数据视选择的类型不同有可能占用一或多字节。
+			//例如，20B的ArrayBuffer可以保存20个Int8Array或Uint8Array，或者10个Int16Array或Uint16Array，或者5个Int32Array、Unit32Array或Float32Array，或者2个Float64Array。
+			//由于这些视图都继承自DataView，因而可以使用相同的构造函数参数来实例化。
+			//第一个参数是要使用ArrayBuffer对象，第二个参数是作为起点的字节偏移量(默认为0)，第三个参数是要包含的字节数。
+			//三个参数中只有第一个是必需的
+			var buffer=new ArrayBuffer(30);
+			
+			//创建一个新数组，使用整个缓冲器
+//			var int8s=new Int8Array(buffer);
+			
+			//只使用从字节9开始的缓冲器
+//			var int16s=new Int16Array(buffer,9);
+			
+			//只使用从字节9到字节18的缓冲器
+//			var uint16s=new Uint16Array(buffer,9,10);
+			
+			//能够指定缓冲其中可用的字节段，意味着能在同一个缓冲器中保存不同类型的数值。
+			//比如，下面的代码就是在缓冲器的开头保存8位整数，而在其他字节中保存16位整数。
+			
+			//使用缓冲器的一部分保存8位整数，另一部分保存16位整数
+//			var int8s=new Int8Array(buffer,0,10);
+//			var uint16s=new Uint16Array(buffer,11,10);
+			
+			//每个视图构造函数都有一个名为BYTES_PER_ELEMENT的属性，表示类型化数组的每个元素需要多少字节。
+			//因此，Uint8Array.BYTES_PER_ELEMENT就是1，而Float32Array.BYTES_PER_ELEMENT则为4.可以利用这个属性来辅助初始化。
+			
+			//需要10个元素空间
+			var int8s=new Int8Array(buffer,0,10*Int8Array.BYTES_PER_ELEMENT);
+			//需要5个元素空间
+			var int16s=new Uint16Array(buffer,int8s.byteOffset+int8s.byteLength,5*Uint16Array.BYTES_PER_ELEMENT);
+			
+			//以上代码基于同一个数组缓冲器创建了两个视图。缓冲器的前10B用于保存8位整数，而其他字节用于保存无符号16位整数。
+			//在初始化Uint16Array的时候，使用了Int8Array的byteOffset和byteLength属性，以确保uint16s位于8位数据之后。
+			//如前所述，类型化视图的目的在于简化对二进制数据的操作。
+			//除了前面看到的优点之外，创建类型化视图还可以不用首先创建ArrayBuffer对象。
+			//只要传入希望数组保存的元素数，相应的构造函数就可以自动创建一个包含足够字节数的ArrayBuffer对象，
+			
+			//创建一个数组保存10个8位整数(10字节)
+			var int8s=new Int8Array(10);
+			//创建一个数组保存10个16位整数(20字节)
+			var int16s=new Int16Array(10);
+			
+			//另外，也可以把常规数组转换为类型化视图，只要把常规数组传入类型化视图的构造函数即可
+			
+			//创建一个数组保存5个8位整数(10字节)
+			var int8s=new Int8Array([10,20,30,40,50]);
+			//这是用默认值来初始化类型化视图的最佳方式，也是WebGL项目中最常用的方式
+			//以这种方式来使用类型化视图，可以让它看起来更像Array对象，同时也能确保读写信息的时候使用正确的数据类型
+			
+			//使用类型化视图时，可以通过方括号语法访问每一个数据成员，可以通过length属性确定数组中有多少元素。
+			//这样，对类型化视图的迭代与对Array对象的迭代就是一样的了。
+			for(var i=0;i<int8s.length;i++){
+				console.log("Value at position "+i+" is "+int8s[i]);
+			}
+			
+			//当然,也可以使用方括号语法为类型化视图的元素赋值.
+			//如果为相应元素指定的字节数放不下相应的值,则实际保存的值是最大可能的值的模.
+			//例如,无符号16位整数所能表示的最大数值是65535,如果你想用保存65536,那么实际保存的值是0,如果你想保存65537,那么实际保存的值是1,以此类推
+			
+			var uint16s=new Uint16Array(10);
+			uint16s[0]=65537;
+			console.log(uint16s[0]);		//1
+			
+			//数据类型不匹配时不会抛出错误，所以你必须自己保证所赋的值不会超过相应元素的字节限制
+			//类型化视图还有一个方法，即subarray()，使用这个方法可以基于底层数组缓冲器的子集创建一个新视图。
+			//这个方法接受两个参数：开始元素的索引和可选的结束元素的索引。
+			//返回的类型与调用该方法的视图类型相同，例如
+			var uint16s=new Uint16Array(10);
+			var sub=uint16s.subarray(2,5);
+			
+			//在以上代码中，sub也是Uint16Array的一个实例，而且底层与uint16s都基于同一个ArrayBuffer。
+			//通过大视图创建小视图的主要好处就是，在操作大数组中的一部分元素时，无需担心意外修改了其他元素
+			//类型化数组是WebGL项目中执行各种操作的重要基础
+			
+		//15.3.2 WebGL上下文				p468
+			//目前，在支持的浏览器中，WebGL的名字叫"experimental-webgl"，这是因为WebGL规范仍然为定制完成。
+			//制定完成后，这个上下文的名字就会变成简单的"webgl"。
+			//如果浏览器不支持WebGL，那么取得上下时，务必先检测一下返回值。
+			
+			var drawing=document.getElementById("drawing");
+			
+			//确定浏览器支持<canvas>元素
+			if(drawing.getContext){
+				var gl=drawing.getContext("experimental-webgl");
+				if(gl){
+					//使用WebGL
+				}
+			}
+			
+			//一般都把WebGL上下文对象命名为gl。大多数WebGL应用和示例都遵守这一约定，因为OpenGL ES2.0规定的方法和值通常都以"gl"开头
+			//这样做也可以保证JavaScript代码与OpenGL程序更相近。
+			//取得了WebGL上下文之后，就可以开始3D绘图了。
+			//如前所述，WebGL是OpenGL ES 2.0的Web版，因此本节讨论的概念实际上就是OpenGL概念在JavaScript中的实现
+			//通过给getContext()残敌第二个参数，可以为WebGL上下文设置一些选项。
+			//这个参数本身是一个对象，可以包含下列属性
+			//1.alpha：值为true，表示为上下文创建一个Alpha通道缓冲区；默认值为true
+			//2.depth：值为true，表示可以使用16位深缓冲区；默认值为true
+			//3.stencil：值为true，表示可以使用8位模板缓冲区；默认值为false
+			//4.antialias：值为true，表示将使用默认机制执行抗锯齿操作；默认值true
+			//5.premultipliedAlpha：值为true，表示绘图缓冲区有预乘Alpha值；默认值为true
+			//6.preserveDrawingBuffer：值为true，表示绘图完成后保留绘图缓冲区；默认值为false
+			
+			//建议确实有必要的情况下再开启这个值，因为可能影响性能
+			//传递这个选项对象的方式如下：
+			var drawing=document.getElementById("drawing");
+			
+			//确定浏览器支持<canvas>元素
+			if(drawing.getContext){
+				var gl=drawing.getContext("experimental-webgl",{alpha:true});
+				if(gl){
+					//使用WebGL
+				}
+			}
+		
+		//大多数上下文选项只在高级技巧中使用。
+		//很多时候，各个选项的默认值就能满足我们的要求。
+		//如果getContex()无法创建WebGL上下文，有的浏览器会抛出错误。
+		//为此，最好把调用封装到try-catch块中。
+		var drawing=document.getElementById("drawing");
+		var gl;
+		if(drawing.getContext){
+			try{
+				gl=drawing.getContex("experimental-webgl");
+			}catch(ex){}
+			if(gl){
+				//使用WebGL
+			}else{
+				alert("WebGL context could not be created.")
+			}
+		}
+		
+		//1.常量					p469
+			//如果你熟悉OpenGL，那肯定会对各种操作中使用非常多的常量印象深刻。
+			//这些常量在OpenGL中都带前缀GL_。
+			//在WebGL中，保存在上下文对象中的这些常量都没有GL_前缀。
+			//比如说，GL_COLOR_BUFFER_BIT常量在WebGL上下文就是gl.COLOR_BUFFER_BIT。
+			//WebGL以这种方式支持大多数OpenGL常量(有一部分常量是不支持的)。
+			
+		//2.方法命名	
+			//OpenGL(以及WebGL)中的很多方法都试图通过名字传达有关数据类型的信息。
+			//如果某方法可以接受不同类型及不同数量的参数，看方法名的后缀就可以知道。
+			//方法名的后缀会包含参数个数(1到4)和接收的数据类型(f表示浮点数，i表示整数)。
+			//例如。gl.uniform4f()意味着要接收4个浮点数，而gl.uniform3i()则表示要接收3个整数。
+			
+			//也有很多方法接收数组参数而非一个个单独的参数。
+			//这样的方法其名字中会包含字母v(即vector，矢量)
+			//因此，gl.uniform3iv()可以接收一个包含3个数值的整数数组。
+			
+		//3.准备绘图
+			//在实际操作WebGL上下文之前，一般都要使用某种实色清除<canvas>,为绘图做好准备。
+			//为此，首先必须使用clearColor()方法来指定要使用的颜色值，该方法接受4个参数：红、绿、蓝和透明度
+			//每个参数必须是一个0到1之间的数值，表示每种分量在最终颜色中的强度
+			gl.clearColor(0,0,0,1);			//black
+			gl.clear(gl.COLOR_BUFFER_BIT);
+			
+			//以上代码把清理颜色缓冲区的值设置为黑色，然后调用了clear()方法,这个方法与OpenGL中的glClear()等价。
+			//传入的参数gl.COLOR_BUFFER_BIT告诉WebGL使用之前定义的颜色来填充相应区域。
+			//一般来说，都要先清理缓冲区，然后在执行其他绘图操作。
+			
+		//4.视口与坐标
+			//开始绘图之前，通常要先定义WebGL的视口(viewport)。
+			//默认情况下，视口可以使用整个<canvas>区域。
+			//要改变视口大小，可以调用viewport()方法并传入4个参数：(视口相对于<canvas>元素的)x坐标、y坐标、宽度和高度。
+			//例如，下面的调用就使用了<canvas>元素：
+			gl.viewport(0,0,drawing.width,drawing.height);
+			
+			//视口坐标与我们通常熟悉的网页坐标不一样。
+			//视口坐标的原点(0,0)在<canvas>元素的左下角，x轴和y轴的正方向分别是向右和向上，可以定义为(width-1,height-1),如p470图15-15所示
+			
+			//知道怎么定义视口大小，就可以只在<canvas>元素的部分区域中绘图。
+			//视口是<canvas>左下角四分之一区域
+//			gl.viewport(0,0,drawing.width/2, drawing.heigth/2);
+			//视口是<canvas>左上角四分之一区域
+//			gl.viewport(0,drawing.height/2,drawing.width/2,drawing.height/2);
+			//视口是<canvas>右下角四分之一区域
+//			gl.viewport(drawing.width/2,0,drawing.width/2,drawing.width/2);
+
+			//另外，视口内部的坐标系与定义视口的坐标系也不一样。
+			//在视口内部，坐标原点(0,0)是视口的中心点，因此视口左下角坐标为(-1,-1)，而右上角坐标为(1,1)，如p470图15-16所示
+			
+			//如果在视口内部绘图时使用外部的坐标，结果可能会被视口剪切。比如，要绘制的形状有一个顶点在(1,2)，那么该形状在视口右侧的部分会被剪切掉
+			
+		//5.缓冲区
+			//顶点信息保存在JavaScript的类型化数组中，使用之前必选转换到WebGL的缓冲区。
+			//要创建缓冲区可以调用gl.createBuffer(),然后使用gl.bindBuffer()绑定到WebGL上下文。
+			//这两步做完之后，就可以用数据来填充缓冲区了。
+			var buffer=gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+			gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0.5,1]),gl.STATIC_DRAW);
+			
+			//调用gl.bindBuffer()可以将buffer设置为上下文的当前缓冲区。
+			//此后，所有缓冲区操作都直接在buffer中执行。
+			//因此，调用gl.bufferData()是不需要明确传入buffer也没有问题。
+			//最后一行代码使用Float32Array中的数据初始化了buffer(一般都是用Float32Array来保存最顶点信息)。
+			//如果想使用drawElements()输出缓冲区内容，也可以传入gl.ELEMENT_ARRAY_BUFFER。
+			
+			//gl.bufferData()的最后一个参数用于指定使用缓冲区的方式，取值范围是如下几个常量
+			//1.gl.STATIC_DRAW：数据只加载一次，在多次绘图中使用
+			//2.gl.STREAM_DRAW：数据只加载一次，在几次绘图中使用
+			//3.gl。DYNAMIC_DRAW：数据动态改变，在多次绘图中使用
+			
+			//如果不是非常有经验的OpenGL程序员，多数情况下将缓冲区使用方式设置为gl.STATIC_DRAW即可
+			//在包含缓冲区的页面重载之前，缓冲区始终保留在内存中。如果不想要某个缓冲区了，可以直接调用gl.deleteBuffer()释放内存
+
+//			gl.deleteBuffer(buffer);
+			
+		//6.错误
+			//JavaScript和WebGL之间的一个最大的区别在于，WebGL操作一般不会抛出错误。
+			//为了知道是否有错误发生，必须在调用某个可能出错的方法后，手工调用gl.getError()方法。
+			//这个方法返回一个表示错误类型的常量。可能的错误常量如下
+			//1.gl.NO_ERROR：上一次操作没有发生错误(值为0)
+			//2.gl.INVALID_ENUM：应该给方法传入WebGL常量，但却传错了参数
+			//3.gl.INVALID_VALUE：在需要无符号数的地方传入了负值
+			//4.gl.OUT_OF_MEMORY：没有足够的内存完成操作
+			//5.gl.CONTEXT_LOST_WEBGL：由于外部事件(如设备断电)干扰丢失了当前WebGL上下文
+			
+			//每次调用gl.getError()方法返回一个错误值。
+			//第一次调用后，后续对gl.getError()的调用可能会返回另一个错误值。
+			//如果发生了多个错误，需要反复调用gl.getError()直至它返回gl.NO_ERROR。
+			//在执行了很多操作的情况下，最好通过一个循环来调用getError()，如下所示
+			var errorCode=gl.getError();
+			while(errorCode){
+				console.log("Error occurred: "+errorCode);
+				errorCode=gl.getError;
+			}
+			//如果WebGL脚本输出不正确，那在脚本中放几行gl.getError()有助于找出问题所在
+			
+		//7.着色器
+			//着色器(shader)是OpenGL中的另一个概念。
+			//WebGL中有两种着色器：顶点着色器和片段(或像素)着色器。
+			//顶点着色器用于将3D顶点转换为需要渲染的2D点。
+			//片段着色器用于准确计算要绘制的每个像素的颜色。
+			//WebGL着色器的独特之处也是其难点在于，他们并不适用JavaScript写的。
+			//这些着色器都是使用GLSL(OpenGL Shading Language，OpenGL着色语言)写的，GLSL是一种C和JavaScript完全不同的语言
+		
+		//8.编写着色器
+			//GLSL是一种类C语言，专门用于编写OpenGL着色器。
+			//因为WebGL是OpenGL Es2.0的实现，所以OpenGL中使用的着色器可以直接在WebGL中使用。
+			//这样就方便了桌面图标应用一直到浏览器中。
+			
+			//每个着色器都有一个main()方法，该方法在绘图期间会重复执行。
+			//为着色器传递数据的方式有两种：Attribute和Uniform。
+			//通过Attribute可以向顶点着色器中传入顶点信息，通过Uniform可以向任何着色器传入常量值。
+			//Attribute和Uniform在main()方法外部定义，分别使用关键字attribute和uniform。
+			//在这两个值类型关键字之后，是数据类型和变量名。
+			//下面是一个简单的顶点着色器的例子
+		</script>	
+		
+	</body>
+</html>

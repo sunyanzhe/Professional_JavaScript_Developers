@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<script>
+			var buffer=new ArrayBuffer(20);
+			var int8s=new Int8Array(buffer,10 * Int8Array.BYTES_PER_ELEMENT);
+			var uint8s=new Uint8Array(buffer,int8s.byteOffset+int8s.byteLength,1 * Uint8Array.BYTES_PER_ELEMENT);
+		</script>
+	</body>
+</html>

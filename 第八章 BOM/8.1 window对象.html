@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>8.1window对象</title>
+	</head>
+	<body>
+		<script>
+		//8.1window对象		p193
+			//BOM的核心对象是window，它表示一个浏览器的实例。
+			//在浏览器中，window对象有双重角色，它既是通过JavaScript访问浏览器窗口的一个借口，又是ECMAScript规定的Global对象。
+			//这意味着在网页中定义的任何一个对象、变量和函数，都以window作为其Global对象，因此有权访问parseInt()等方法。
+			
+		//8.1.1全局作用域
+			//由于window对象同时扮演者ECMAScript中的Global对象的角色，因此所有在全局作用域中声明的变量、函数都会变成window对象的属性和方法
+			var age=29;
+			function sayAge(){
+				return this.age;
+			}
+			console.log(window.age);
+			console.log(sayAge());
+			console.log(window.sayAge());
+			
+			//抛开全局变量会成为window对象的属性不谈，定义全局变量与在window对象上直接定义属性还是有一点差别的
+			//全局变量不能通过delete删除符删除，而直接在window对象上的定义的属性可以
+			
+			var age1=29;
+			window.color="red";
+			
+			//在IE<9时抛出错误，在其他所有浏览器中都会返回false
+			delete window.age;
+			
+			//在IE<9时抛出错误，在其他所有浏览器中都会返回true
+			delete window.color 	//return true
+			
+			console.log("delete window.age1 %o",window.age1);		//29
+			console.log("delete window.color %o",window.color);	//undefined
+			
+			//使用var语句添加的window属性会有一个名为[[Configurable]]的特性，这个特性的值被设置为false，因此这样定义的属性不可能通过deelte操作符删除。
+			//IE8及更早的版本在遇到使用delete删除window属性的语句时，不管该属性最初是如何创建的，都会抛出错误，以示警告。
+			//IE9及更高版本不会抛出错误
+			
+			//另外，还要记住一件事:尝试访问未声明的变量会抛出错误，但是通过查询window对象，可以知道某个可能未声明的变量是否存在
+			
+			//这里会抛出错误，因为oldValue未定义
+			//var newValue=oldValue;
+			
+			//这里不会抛出错误，因为这是一次属性查询，newValue的值是undefined
+			var newValue=window.oldValue;
+			console.log(newValue);
+			
+			//Windwos Mobile平台的IE浏览器不允许通过window.property=value之类的形式，直接在window对象上创建新的属性或方法。
+			//可是，在全局作用域中声明的所有变量和函数，照样会变成window对象的成员
+			
+		//8.1.2窗口关系及框架		p194
+			//如果页面中包含框架，则每个框架都拥有自己的window对象，并且保存在frames集合中。
+			//在frames集合中，可以通过数值索引(从0开始，从左往右，从上到下)或者框架名称来访问相应的window对象。
+			//每个window对象都有一个name属性，其中包含框架的名称
+			
+			//除非，最高层窗口是通过window.open()打开的，否则其window对象的name属性不会包含任何值。
+			
+			//与框架有关的最后一个对象是self，他始终指向window;实际上，self和window对象可以互换使用。
+			//引入self对象的目的是为了与top和parent对象对应起来，因此他不格外包好其他值。
+			//所有这些对象都是window对象的属性，可以通过window.parent、window.top等形式来访问。
+			//同时，这也意味着可以将不同层次的window对象连缀起来，例如window.parent.parent.frames[0].
+			
+			//注意:在使用框架的情况下，浏览器中会存在多个Global对象。在每个框架中定义的全局变量会自动变成框架中window对象的属性。
+			//由于每个window对象都包含原生类型的构造函数，因此每个框架都有一套自己的构造函数，这些构造函数一一对应，但并不相等
+			//例如top.Object不等于top.frames[0].Object。这个问题会影响到对跨框架传递的对象使用instanceof操作符
+			
+		//8.1.3窗口位置 		p197
+			//用来确定和修改window对象位置的属性和方法有很多。
+			//IE、Safari、Opera和Chrome都提供了screenLeft和screenTop属性，分别用于表示窗口相对于屏幕左边和上边的位置。
+			//Firefox则在screenX和screenY属性中提供了相同的窗口位置信息，Safari和Chrome也同时支持这两个属性。
+			//Opera虽然支持screenX和screenY属性，但与screenLeft和screenTop属性并不对应，incident建议大家不要再Opera中使用它们
+			//使用下列代码可以跨浏览器取得窗口左边和上边的位置
+			
+			var leftPos=(typeof window.screenLeft=="number")?window.screenLeft:window.screenX;
+			var leftPos=(typeof window.screenTop=="number")?window.screenTop:window.screenY;
+			
+			//这个例子运用了二元操作符首先确定screenLeft和screenTop属性是否存在，如果是(在IE、Safari、Opera和Chrome中)，则取得两个属性的值。
+			//如果不存在(在Firefox中)，则取得screenX和screenY的值
+			
+			//在使用这些值的过程中，还必须注意一些小问题。
+			//在IE、Opera中，screenLeft和screenTop中保存的是从屏幕左边和上边到由window对象表示的页面可见区域的距离。
+			//换句话说，如果window对象是最外层对象，而且浏览器窗口紧贴屏幕最上端————即y轴坐标为0，那么screenTop的值就是位于页面可见区域上方的浏览器工具栏的像素高度
+			//但是，在Chrome、Firefox和Safari中，screenY或screenTop中保存的是整个浏览器窗口位于屏幕的坐标值，即在窗口的y轴坐标为0时返回0
+			
+			//更让人捉摸不透是，Firefox、Safari和Chrome始终返回页面中每个框架的top.screenX和top.screenY值。
+			//即使在页面由于被设置了外边距而发生偏移的情况下，相对于window对象使用了screenX和screenY每次也都会返回相同的值。
+			//而IE和Opera则会给出框架相对于屏幕边界的精确坐标值
+			
+			//最终结果，就是无法在跨浏览器的条件下取得窗口左边和上边的精确坐标值。
+			//然而使用moveTo()和moveBy()方法倒是有可能将窗口精确地移动到一个新位置。
+			//这两个方法都接受两个参数，其中moveTo()是界都的新位置的x和y的坐标值，而moveBy()接受的是在水平和垂直移动的像素数
+			
+			//将窗口移动到屏幕左上角
+			window.moveTo(0,0);
+			
+			//将窗口向下移动100像素
+			window.moveBy(0,100);
+			
+			//将窗口移动到（200，300）
+			window.moveTo(200,300);
+			
+			//将窗口向左移动50像素
+			window.moveBy(-50,0);
+			
+		//8.1.4窗口大小 		p198
+			//跨浏览器确定一个窗口大小不是一件简单的事。IE9+、FireFox、Safari、Opera和Chrome均为此提供了4个属性:innerWidth、innerHeight、outerWidth和outerHeight。
+			//在IE9+、Safari和Firefox中，outerWidth和outerHeight返回浏览器窗口本身的尺寸(无论是最外层的window对象还是从某个框架访问)。
+			//在Opera中，这两个属性的值表示页面视图容器(Opera中单个标签页对应的浏览器窗口)的大小。
+			//而innerWidth和innerHeight则表示该容器中页面视图区的大小(减去边框宽度)。
+			//在Chrome中，outerWidth、outerHeight和innerWidth、innerHeight返回相同的值，即窗口(viewport)大小而非浏览器窗口大小
+			
+			//IE8及更早版本没有提供取得当前浏览器窗口尺寸的属性;不过，它通过DOM提供的页面可视区域的相关信息。
+			//在IE、Firefox、Safari、Opera和Chrome中，document.documentElement.clientWidth和document.documentElement.clientHeight中保存了页面视口的信息。
+			//在IE6中，这些属性必须在标准模式下才有效；乳沟有混杂模式，就必须通过document.body.clientWidth和document.body.clientHeight取得相同信息。
+			//而对于混杂模式下的Chrome，则无论通过document.documentElement还是document.body中的clientWidth和clientHeight属性，都可以取得页面视口的大小
+			
+			//虽然最终无法确定浏览器窗口本身的大小，但却可以取得页面视口的大小
+			
+			var pageWidth=window.innerWidth;
+			var pageHeight=window.innerHeight;
+			if(typeof pageWidth!="number"){
+				if(typeof document.compatMode!="number"){
+					pageWidth=document.documentElement.clientWidth;
+					pageHeight=document.documentElement.clientHeight;
+				}else{
+					pageWidth=document.body.clientWidth;
+					pageHeight=document.body.clientHeight;
+				}
+			}
+			
+			//在以上代码中，我们首先将window.innerWidth和window.innerHeight的值分别赋给了pageWidth和pageHeight。
+			//然后检查pageWidth保存的是不是一个数值；如果不是，则通过检查document.comPatMode(这个属性将在第10章全面讨论)来确定页面是否处于标准模式。
+			//如果是，则分别使用document.documentElement.clientWidth和documet.documentElement.clientHeight的值。
+			//否则，就是用document.body.clientWidth和document.body.clientHeight的值
+			
+			//对于移动设备，window.innerWidth和window.innerHeight保存着可见视口，也就是屏幕上可见页面区域的大小。
+			//移动IE浏览器不支持这些属性，但通过document.documentElement.clientWidth和document.documentElement.clientHeight提供了相同的信息
+			//随着页面的缩放，这些值也会相应变化
+			
+			//在其他移动浏览器中，document.documentElement度量的是布局视口，即渲染后页面的实际大小(与可见视口不同，可见视口知识整个页面中的一小部分)。
+			//移动IE浏览器把布局视口的信息保存在document.body.clientWidth和document.body.clientHeight中，这些值不会随着页面缩放变化。
+			//由于与桌面浏览器件存在这些差异，最后是先检测一下时候是否在使用移动设备，然后再决定使用哪个属性
+			
+			
+			//另外，使用resizeTo()和resizeBy()方法可以调整浏览器窗口的大小。
+			//这两个方法都接收两个参数，其中resizeTo()接受浏览器窗口的新高度和新宽度，而resizeBy()接收新窗口与原窗口的宽度和高度的差
+			
+			//调整到100X100
+			window.resizeTo(100,100);
+			
+			//调整到200X150
+			window.resizeBy(100,50);
+			
+			//调整到300X300
+			window.resizeTo(300,300);
+			
+			//需要注意的是，这两个方法与移动窗口位置的方法类似，也有可能被浏览器禁用；而且，在Opear和IE7(及更高版本)中默认就是禁用的。
+			//另外，这两个方法童谣不适合用于框架，而只能对最外层的window对象使用
+			
+		//8.1.5导航和打开窗口			p199
+			//使用window.open()方法既可以导航到一个特定的URL，也可以打开一个新的浏览器窗口。
+			//这个方法可以接收4个参数:要加载的URL、窗口目标、一个特性字符串以及一个表示新页面是否取代就浏览器历史记录中当前加载页面的布尔值。
+			//通常只须传递第一个参数，最后一个参数之后打不开新窗口的情况下使用。
+			
+		//8.1.6间歇调用和超时调用
+			//JavaScript是单线程语言，但它允许通过设置超时值和间歇时间值来调度代码在特定的时刻执行。
+			//前者是在指定的时间过后执行代码，而后者则是每个指定的时间就执行一次代码。
+			
+			//超时调用需要使用window对象的setTimeout()方法，它接收两个参数:要执行的代码和以毫秒表示的时间(即在执行代码钱需要等待多少毫秒)
+			//其中，第一个参数可以是包含JavaScript代码的字符串(就和在eval()函数中使用的字符串一样)，也可以是一个函数。
+			setTimeout("alert('Hello world')",1000);
+			
+			setTimeout(function(){
+				alert("Hello world");
+			},1000);
+			
+			//虽然这两种调用方式都没有问题，但是由于传递字符串可能导致性能损失，因此不建议以字符串作为第一个参数
+			
+			//第二个参数是一个表示等待多长时间的毫秒数，但经过该事件后指定的代码不一定会执行。JavaScript是一个单线程的解释器，因此一定时间内只能执行一段代码。
+			//为了控制要执行的代码，就有一个JavaScript任务队列。这些任务会按照将它们添加到队列的顺序执行。
+			//setTimeout()的第二个参数告诉JavaScript再过长时间把当前任务添加到队列中。
+			//如果队列是空的，那么添加的代码会立即执行；如果队列不是空的，那么他就要等前面的代码执行完了以后在执行。
+			
+			//调用setTimeout()之后，该方法会返回一个数值ID，表示超时调用。
+			//这个超时调用ID是执行代码的唯一标识符，可以通过它来取消超时调用。
+			//要取消尚未执行的超时调用计划，可以调用clearTimeout()方法并将相应的超时调用ID作为参数传递给它。
+			
+			//设置超时调用
+			var timeoutId=setTimeout(function(){
+				alert("Hello world");
+			},1000);
+			//注意:把它取消掉
+			clearTimeout(timeoutId);
+			
+			//只要是在指定的时间尚未过去之前调用clearTimeout()，就可以完全取消超时调用。
+			//前面的代码在设置超时调用之后马上又调用clearTimeout()，结果跟什么也没有发生一样。
+			//超时调用的代码都是在全局作用域中执行的，因此函数中的this得知在非严格模式下指向window对象，在严格模式下是undefined。
+			
+			//间歇调用与超时调用类似，只不过它会按照指定的时间间隔重复执行代码，直至间歇调用被取消或被页面卸载。
+			//设置间歇调用的方法是setInterval()，它接受的参数与setTimeout()相同:要执行的代码和每次执行之前需要等待的毫秒数。
+			
+			//调用setInterval()方法同样也会返回一个间歇调用ID，该ID可用于在将来某个时刻取消间歇调用。
+			//要取消未执行的间歇调用，可以使用clearInterval()方法	并传入相应的间歇调用ID。
+			//取消间歇调用的重要性要远远高于取消超时调用，因为在不加干涉的情况下，间歇调用将会一直执行到页面卸载。
+			
+			var num=0;
+			var max=10;
+			var intervalId=null;
+			function incrementNumber1(){
+				num++;
+				alert(num);
+				if(num==max){
+					clearInterval(intervalId);
+					alert("done");
+				}
+			}
+			intervalId=setInterval(incrementNumber1,1000);
+			
+			function incrementNumber2(){
+				num++;
+				if(num<max){
+					alert(num);
+					setTimeout(incrementNumber2,1000);					
+				}else{
+					alert("done");
+				}
+			}
+			setTimeout(incrementNumber2,1000);
+			
+			//可见，在使用超时调用时，没有必要跟踪超时调用ID，因为每次执行代码之后，如果不再设置另一次超时调用，调用就会停止。
+			//一般认为，使用超时调用来模拟间歇调用是一种最佳的模式。
+			//在开发环境中，很少使用真正的间歇调用，原因是后一个间歇调用可能会在前一个间歇调用结束之前启动。
+			//而如果使用超时调用，则完全可以避免这一点。所以，最好不要使用间歇调用
+			
+		//8.1.7系统对话框 		p205
+			//alert()这个方法接收一个字符串，并将其显示给用户。
+			//confirm()，两个按钮一个"确定"一个"取消"；返回true和false
+			//prompt(),接受两个参数:要显示给用户的文本提示和文本输入域的默认值(可以是空字符串)
+			//如果用户单击了"OK"按钮，则返回文本域的值；如果单击了"Cancel"或没有单击OK而是通过其他方式关闭了对话框，则该方法返回null。
+			
+		</script>
+	</body>
+</html>

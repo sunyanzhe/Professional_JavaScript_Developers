@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>10.2 DOM操作技术</title>
+	</head>
+	<body>
+		<script>
+			//10.2.1动态脚本			p277
+				//使用<script>向页面中插入JavaScript代码，一种是通过src特性包含外部文件，另一种是使用元素本身来包含代码
+				
+				//第一种方式：
+				function loadScript(url){
+					var script=document.createElement("script");
+					script.type="text/javascript";
+					script.src=url;
+					document.body.appendChild(script);
+				}
+				
+				//第二种方式
+				function loadScriptString(code){
+					var script=document.createElement("script");
+					script.type="text/javascript";
+					script.appendChild(document.createTextNode(code));
+					document.body.appendChild(script);
+				}
+				//在Firefox、Safari、Chrome和Opera中，这些DOM代码可以正常运行。
+				//但在IE中，则会导致错误
+				//IE将<script>视为一个特殊的元素，不允许DOM访问其子节点。
+				//不过，可以使用<script>元素的text属性来指定JavaScript代码
+				
+				function loadScriptString(code){
+					var script=document.createElement("script");
+					script.type="text/javascript";
+					try{
+						script.appendChild(document.createTextNode(code));
+					}catch(ex){
+						script.text=code;
+					}
+					document.body.appendChild(script);
+				}
+				
+				//这里先尝试标准的DOM节点方法，因为除了IE(在IE中会导致抛出错误)，所有浏览器都支持这种方式。
+				//如果这行代码抛出了错误，说明是UE，于是就使用text属性，
+				//以这种方式加载的代码会在全局作用域中执行，而且当脚本执行后将立即可用。
+				//实际上，这样执行代码与在全局作用与中把相同的字符串传给eval()是一样的。
+				
+			//10.2.2 动态样式			p279
+				//能把CSS样式包含到HTML页面中的元素有两个。
+				//其中，<link>元素用于包含来自外部的文件，而<style>元素用于指定嵌入的样式。
+				//与动态脚本类似，所谓动态样式是指在页面刚加载是不存在的样式，动态样式是在页面加载王成后动态添加到页面中的
+				
+				//第一种方式
+				function loadStyle(url){
+					var link=document.createElement("link");
+					link.rel="stylesheet";
+					link.type="text/css";
+					link.href=url;
+					var head=document.getElementsByTagName("head")[0];
+					head.appendChild(link);
+				}
+				
+				//另一种方式是使用<style>元素来包含嵌入式CSS
+				function loadStyleString(css){
+					var style=document.createElement("style");
+					style.type="text/css";
+					style.appendChild(document.createTextNode(css));
+					var head=document.getElemetsByTagName("head")[0];
+					head.appendChild(style);
+				}
+				//以上代码可以在Firefox、Safari、Chrome和Opera中运行，
+				//IE将<style>视为一个特殊的、与<script>类似的节点，不允许访问其子节点。
+				//事实上，IE此时抛出的错误与向<script>元素添加的、与<script>类似的节点，不允许访问其子节点。
+				//事实上，IE此时抛出的错误与向<script>元素添加子节点时抛出的错误相同。
+				//解决IE中这个问题的办法，就是访问元素的stylesheet属性，该属性又有一个cssText属性，可以接受CSS代码。
+				
+				function loadStyleString(css){
+					var style=document.createElement("link");
+					style.type="text/css";
+					try{
+						style.appendChild(document.createTextNode("css"));
+					}catch(ex){
+						style.styleSheet.cssText=css;
+					}
+					var head=document.getElementsByTagName("head")[0];
+					head.appendChild(style);
+				}
+				//与动态添加嵌入式脚本类似，重写后的代码使用了try-catch语句来捕获IE抛出的错误，然后再使用针对IE的特殊方式来设置样式。
+			
+				//注意:如果专门针对IE编写代码，务必小心使用styleSheet.cssText属性。
+				//在重用同一个<style>元素并再次设置这个属性时，有可能会导致浏览器崩溃。
+				//同样，将cssText属性设置为空字符串也可能导致浏览器崩溃。
+			
+			
+			//10.2.3 操作表格		p281
+				//<table>元素是HTML中最复杂的结构之一。
+				//想要创建表格，一般都必须涉及表示表格行、单元格、表头等方面的标签
+				//由于设计的标签多，因而使用核心DOM方法和修改表格往往都免不了要编写大量的代码。
+				//<table border="1" width="100%">
+				//	<tbody>
+				//		<tr>
+				//			<td>Cell 1,1</td>
+				//			<td>Cell 2,1</td>
+				//		</tr>
+				//		<tr>
+				//			<td>Cell 1,2</td>
+				//			<td>Cell 2,2</td>
+				//		</tr>
+				//	</tbody>
+				//</table>
+				
+				//要使用核心DOM方法创建这些元素，得需要很多的代码
+				
+				//创建table
+				var table=document.createElement("table");
+				table.border=1;
+				table.width="100%";
+				
+				//创建tbody
+				var tbody=document.createElement("tbody");
+				table.appendChild(tbody);
+				
+				//创建第一行
+				var row1=document.createElement("tr");
+				tbody.appendChild(row1);
+				var cell1_1=document.createElement("td");
+				cell1_1.appendChild(document.createTextNode("Cell 1,1"));
+				var cell2_1=document.createElement("td");
+				cell2_1.appendChild(document.createTextNode("Cell 2,1"));
+				row1.appendChild(cell1_1);
+				row1.appendChild(cell2_1);
+				
+				
+				//创建第二行
+				var row2=document.createElement("tr");
+				tbody.appendChild(row2);
+				var cell1_2=document.createElement("td");
+				cell1_2.appendChild(document.createTextNode("Cell 1,2"));
+				var cell2_2=document.createElement("td");
+				cell2_2.appendChild(document.createTextNode("Cell 2,2"));
+				row2.appendChild(cell1_2);
+				row2.appendChild(cell2_2);
+
+				document.body.appendChild(table);
+				
+				//显然代码很馋，而且不好懂。
+				//为了方便构建表格，HTMLDOM为<table>、<tbody>和<tr>元素添加了一些属性和方法
+				
+				//为<table>元素添加的属性和方法
+				//1.caption：保存着对<caption>的指针
+				//2.tbodies:是一个<tbody>元素的HTMLCollection
+				//3.tFoot:保存着对<tfoot>元素的指针
+				//4.tHead：保存着对<thead>元素的指针
+				//5.rows:是一个表格中所有行的HTMLCollection
+				//6.createTHead():创建一个<thead>元素，将其放到表格中，返回引用
+				//7.createTFoot():创建一个<tfoot>元素，将其放到表格中，返回引用
+				//8.createCaption():创建一个<caption>元素，对其放到表格中国，返回引用
+				//9.deleteTHead()：删除<thead>元素
+				//10.deleteTFoot():删除<tfoot>元素
+				//11.deleteCaption():删除<caption>元素
+				//12.deleteRow(pos):删除指定位置的行
+				//13.insertRow(pos):向rows集合中的指定位置插入一行
+				
+				//为<tbody>元素添加的属性和方法
+				//1.rows：保存着<tbody>元素中行的HTMLCollection
+				//2.deleteRow(pos):删除指定位置的行
+				//3.insertRow(pos):向rows集合中的指定位置插入一行，返回对新插入行的引用
+				
+				//为<tr>元素添加的属性和方法
+				//1.cells:保存着<tr>元素中单元格的HTMLCollection
+				//2.deleteCell(pos):删除指定位置的单元格
+				//3.insertCell(pos):向cells集合中的指定位置插入一个单元格，返回对新插入的单元格的引用
+				
+				//重写:
+				var table=document.createElement("table")
+				table.border=1;
+				table.width="100%";
+				
+				var tbody=document.createElement("tbody");
+				table.appendChild(tbody);
+				
+				tbody.insertRow(0);
+				tbody.rows[0].insertCell(0);				
+				tbody.rows[0].insertCell(1);
+				tbody.rows[0].cells[0].appendChild(document.createTextNode('Cell 1,1'));
+				tbody.rows[0].cells[1].appendChild(document.createTextNode('Cell 2,1'));
+				
+				tbody.insertRow(1);
+				tbody.rows[1].insertCell(0);				
+				tbody.rows[1].insertCell(1);
+				tbody.rows[1].cells[0].appendChild(document.createTextNode('Cell 1,2'));
+				tbody.rows[1].cells[1].appendChild(document.createTextNode('Cell 2,2'));
+				document.body.appendChild(table);
+				
+		
+		//10.2.4 使用NodeList		p283
+			//想要迭代一个NodeList，最好是使用length属性初始化第二个变量，然后将迭代器与该变量进行比较
+			var divs=document.getElementsByTagName("div");
+			for(var i=0,len=divs.length;i<len;i++){
+				div=document.createElement("div");
+				document.body.appendChild(div);
+			}
+		</script>
+	</body>
+</html>

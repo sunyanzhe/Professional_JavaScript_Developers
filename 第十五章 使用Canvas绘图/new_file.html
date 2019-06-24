@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<video height="300" width="500" id="video" src='../img/How I Became the Bomb - Ulay, Oh.mp4'>不支持video</video>
+		<canvas height="300" width="500" id="canvas"></canvas>
+		<button id="btn">开始/暂停</button>
+		<script>
+			window.onload=function(){
+				var video=document.getElementById("video");
+				var canvas=document.getElementById("canvas");
+				var btn=document.getElementById("btn");
+				var ctx=canvas.getContext("2d");
+				function a(){
+					ctx.drawImage(video,0,0,video.width,video.height);
+					canvas.timer=setTimeout(a,20);
+				}
+				btn.onclick=function(){
+					if(video.paused){
+						video.play();
+						a();	
+					}else{
+						video.pause();
+						clearTimeout(canvas.timer);
+					}
+				}
+			}
+		</script>
+	</body>
+</html>

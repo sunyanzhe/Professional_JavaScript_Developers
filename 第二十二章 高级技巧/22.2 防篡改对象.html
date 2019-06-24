@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+    //22.2防篡改对象             p606
+        //JavaScript共享的本质一直是开发人员心头的痛。因为任何对象都可以在同一环境中运行的代码修改。
+        //开发人员很可能意外地修改别人的代码，甚至更糟糕地，就不兼容的功能重写原生对象。
+        //ECMAScript 5致力于解决这个问题，可以让开发人员定义防篡改对象(tamper-proof object)。
+
+        //第6章讨论了对象属性的问题，也讨论了如何手工设置每个属性的[[Configurable]]、[[Writable]]、[[Enumerable]]、[[Value]]、[[Get]]以及[[Set]]特性，以改变属性的行为、
+        //类似地，ECMAScript 5也增加了几个方法，通过他们可以指定对象的行为。
+
+    //22.2.1不可扩展对象          p606
+        //默认情况下，所有对象都是可以扩展的。
+        //也就是说，任何时候都可以向对象中添加属性和方法。
+        //例如，可以向下面这样先定义一个对象，后来在给它添加一个属性
+        var person={name:"sun"};
+        person.age=29;
+        
+        //即使第一行代码已经完整定义了person对象，但是第二行代码仍然能给他添加属性。
+        //现在，使用Object.preventExtensions()方法可以改变这个行为，让你不能再给对象添加属性和方法。
+        var person2={name:"song"};
+        Object.preventExtensions(person2);
+        person2.age=23;
+        console.log(person2.age);         //undefined
+
+        //在调用了Object.preventExtensions()方法后，就不能给person对象添加新属性和方法了。
+        //在非严格模式下，给对象添加新成员胡导致静默失败，因此person2.age是undefined。而在严格模式下，尝试给不可扩展的对象添加新成员会导致抛出错误
+
+        //虽然不能给对象添加新成员，但已有的成员则丝毫不受影响。
+        //你仍然还可以修改和删除已有的成员，另外，使用Object.isExtensible()方法还可以确定对象是否可以扩展。
+        console.log(Object.isExtensible(person));               //true
+        console.log(Object.isExtensible(person2));              //false
+
+    //22.2.2密封的对象           p607
+        //ECMAScript5位对象定义的第二个保护级别是密封对象(sealed object)。
+        //密封对象不可扩展,而且已有的成员的[[Configurable]]特性将被设置为false。
+        //这就意味着不能删除属性和方法,因为不能使用Object.def
+    </script>
+</body>
+</html>

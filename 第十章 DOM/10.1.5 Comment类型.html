@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>10.1.5 Comment类型</title>
+	</head>
+	<body>
+		<div id="myDiv"><!--A Comment--></div>
+		<script>
+			//10.1.5 Comment类型			p273
+				//注释在DOM中通过Comment类型表示Comment节点具有下列特征:
+				//1.nodeType的值为8
+				//2.nodeName的值为"#comment"
+				//3.nodeValue的值是注释内容
+				//4.parentNode可能是Document或Element
+				//5.不支持(没有)子节点
+				
+				//Comment类型与Text类型继承自相同的基类，因此它拥有除splitText()之外的所有字符串操作方法
+				//与Text类型相似，也可以通过nodeValue或data属性来取得注释的内容
+				//注释节点可以通过其父节点来访问
+				
+				var div=document.getElementById("myDiv");
+				var comment=div.firstChild;
+				console.log(comment.nodeValue);		//A Comment;
+				
+				//使用document.createComment()并为其传递注释文本也可以创建注释节点，如下面的例子所示
+				
+				var comment=document.createComment("A comment");
+				//显然，开发人员很少会创建和访问注释节点，因为注释节点对算法鲜有影响。
+				//此外，浏览器也不会识别位于</html>之后的注释。
+				//如果要访问注释节点，一定要确保它们是<html>元素的后代
+				
+				//注意:在Firefox、Safari、Chrome和Opera中，可以访问Comment类型的构造函数和原型
+				//在IE8中，注释节点被视作标签名为"!"的元素。
+				//也就是说，使用getElementsByTagName()可以取得注释节点。
+				//尽管IE9没有把注释当成元素，但它仍然通过一个名为HTMLCommentElement的构造函数来表示注释
+		</script>
+	</body>
+</html>

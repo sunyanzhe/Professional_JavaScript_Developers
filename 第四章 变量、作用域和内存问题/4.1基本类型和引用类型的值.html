@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<script>
+			//基本类型值指的是简单的数据段，而引用类型值指那些可能由多个值构成的对象。
+			//5种基本数据类型: Undefined Null Number String Boolean
+			//引用类型的值是保存在内存中的对象，当复制保存着对象的某个变量是,操作的是对象的引用。但在为对象添加属性时，操作的是实际的对象
+			
+			
+			//4.1.1动态的属性      p69
+			//定义基本类型值和引用类型值的方式是类似的:创建一个变量并为该变量赋值。但是,当这个值保存到变量中以后,对不同类型值可以将执行的操作则大相径庭.对于引用类型的值可以为其添加属性和方法，也可以改变和删除其属性和方法
+			//例子:
+			var person=new Object();
+			person.name="Nicholas";
+			console.log(person.name);
+			//以上代码创建了一个对象并将其保存在了一个变量person中。然后,我们为该对象添加了一个名为name属性,并将字符串"Nicholas"赋给了这个属性。console.log访问了这个新属性,如果对象不被销毁或者这个属性不被删除,则这个属性将一直存在
+			var name="Nicholas";
+			name.age=27;
+			console.log(name.age);
+			//在这个例子中,为字符串那么定义了一个名为age的属性,并为该属性赋值27。但在下一行访问这个属性时,发现该属性不见了.这说明了只能给引用类型值动态添加属性,以便将来使用。
+			
+			//4.1.2复制变量值  p70 
+			//除了保存的方式不同之外,在从一个变量向另一个变量复制基本类型值和引用类型值时,也存在不同.如果从一个变量想另一个变量复制基本类型的值,会在变量对象上创建一个新值,然后把该值复制到新变量分配的位置上
+			//当从一个变量想另一个变量复制引用类型的值时,同样也会将存储在变量对象中的值复制一份放到为新变量分配的空间中.不同的是,这个值的副本实际上是一个指针,而这个指针指向存储堆中的一个对象.复制操作结束后,两个变量实际上将引用同一个对象.因此改变其中一个对象，就会影响另一个变量
+			var obj1=new Object();
+			var obj2=obj1;
+			obj2.name="Nicholas";
+			console.log(obj1.name);
+			
+			//4.1.3 传递参数	 p70
+			//ECMAScript中所有函数的参数都是按值传递的。也就是说，把函数外部的值复制给函数内部参数，就和把值从一个变量复制到另一个变量一样.有不少开发人员在这一点上可能会感到困惑,因为访问变量有按值和按引用两种方式,而参数只能按值传递。
+			//在向参数传递基本类型的值时，被传递的值会被复制给一个局部变量（即命名参数,或者用ECMAScript的概念来说，就是arguments对象中的一个元素）。在向参数传递引用类型的值时，会把这个值存在内存中的地址复制给一个局部变量，因此这个局部变量的变化会反映在函数的外部
+			//例子
+			function addTen(num){
+				num+=10;
+				return num;
+			}
+			var count=20;
+			var result=addTen(count);
+			console.log(count);
+			console.log(result);
+			//这里的函数addTen()有一个参数num，而参数实际上是函数的局部变量。在调用这个函数时，变量count作为参数被传递给函数，这个变量的值时20，。于是，数值20倍复制给参数num以便在addTen()中使用。在函数内部，参数num的值被加上了10，但这一变化不会影响函数外部的count变量
+			//参数num与count互不认识，它们仅仅是具有相同的值。假如num是按引用传递的话，那么count的值也会变成30，从而反应函数内部的修改。当然，使用数值等基本类型值来说明按值传递参数比较简单，但如果使用对象，那么问题就不怎么好理解了。
+			//例2
+			function setName(obj){
+				obj.name="Nicholas";
+			}
+			var person1=new Object();
+			setName(person1);
+			console.log("person1.name: "+person1.name);
+			//以上代码中创建一个对象，并将其保存在了变量person1中。然后这个变量被传递到setName()函数中之后就被复制给了obj。在这个函数内部，obj和person1引用的是同一个对象。
+			//在当函数内部为obj添加name属性之后，函数外部的person也将有反映；因为person1指向的对象在堆内存中只有一个，而且是全局对象。
+			//很多人错误的认为：局部作用域中修改的对象会在全局作用域中反映出来，就说明参数是按引用传递的。为了证明对象是按值传递的，我们再看另一个例子。
+			
+			function setName2(obj){
+				obj.name="Nicholas";
+				var obj=new Object();
+				obj.name="Grey";
+			}
+			var person2=new Object();
+			setName2(person2);
+			console.log(person2.name);
+			//这个例子与之前例子的区别在于setName2()函数中添加了两行代码：一行代码为obj重新定义了一个对象，另一行代码为该对象定义了一个带有不同值的name属性。
+			//在把person传递给setName2()后，其name属性被设置为"Nicholas"。然后，又将一个新对象赋给变量obj,同时将其name属性设置为"Grey".
+			//如果person是按引用传递的，那么person就会自动被修改为指向其name属性值为"Grey"的新对象。但是，为接下来再访问person.name时，显示的值扔完事”Nicholas.
+			//这说明即使在函数内部修改了参数的值，但原始的引用仍然保持未变。实际上，挡在函数内部重写obj时，这个变量引用的就是一个局部对象了。而这个局部对象会在执行函数完毕后立即被销毁。
+			
+			
+			//4.1.4检测类型	p72
+			//要检测一个变量是什么类型。typeof操作符是确定一个变量是字符串、数值、布尔值、还是undefined最佳的工具，如果是一个对象或者null，则typeof操作符会返回“object”
+			
+			var s="Nicholas";
+			var b=true;
+			var i=22;
+			var u;
+			var n=null;
+			var o=new Object();
+			
+			console.log(typeof s);
+			console.log(typeof b);
+			console.log(typeof i);
+			console.log(typeof u);
+			console.log(typeof n);
+			console.log(typeof o);
+			//当想知道他是什么类型的对象可以使用instanceof操作符
+			//语法：
+			//result = variable instanceof constructor
+			//如果变量是给定引用类型的实例，那么instanceof操作符就会返回true。
+			//例子：
+			console.log(person instanceof Object);
+			console.log(person2 instanceof Array);
+			console.log(person1 instanceof RegExp);
+			//根据规定，所有引用类型的值都是Object的实例。因此，在检测一个引用类型的值和Object构造函数时，instanceof操作符始终会返回true。
+			//当然如果使用instanceof操作符检测基本类型值，则该操作符始终会返回false，因为基本类型不是对象。
+		</script>
+	</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>13.5事件委托</title>
+	</head>
+	<body>
+		<ul id="myLink">
+			<li id="goSomewhere">Go somewhere</li>
+			<li id="doSomething">Do something</li>
+			<li id="sayHi">Say hi</li>
+		</ul>
+		<div id="myDiv">
+			<input type="button" value="Click me" id="myBtn" />
+		</div>
+		<script>
+		//由于事件处理程序可以为现代Web应用程序提供交互能力，因此许多开发人员会部分青红皂白地向页面中添加大量的处理程序。
+		//在创建GUI的语言(如C#)中，为GUI中的每一个按钮添加一个onclick事件处理程序是司空见惯的事，而且这样做也不会导致什么问题
+		//但是在JavaScript中，添加到页面上的事件处理程序数量将直接关系到页面的整体运行性能。导致这一问题的原因是多方面的
+		//首先，每个函数都是对象，都会占用内存;内存中的对象越多，性能就越差
+		//其次，必须事件指定所有事件处理程序而导致的DOM访问次数，会延迟整个页面的交互就绪时间。
+		//事实上，从如何利用好事件处理程序的角度出发，还是有一些方法能够提升性能的
+		
+		//13.5.1 事件委托		p402
+			//对"事件处理程序过多"的问题的解决方案就是事件委托。事件委托利用了事件冒泡，只指定一个事件处理程序，就可以管理某一类型的所有事件。
+			//例如，click事件会一直冒泡到document层次。也就是说，我们可以为整个页面指定一个onclick事件处理程序，而不必给每个可单击的元素分别添加事件处理程序
+			//其中包含3个被单击后会执行操作的列表项。按照传统的做法，需要像下面这样为他们添加3个事件处理程序
+//			var item1=document.getElementById("goSomewhere");
+//			var item2=document.getElementById("doSomething");
+//			var item3=document.getElementById("sayHi");
+//			
+//			item1.addEventListener("click",function(event){
+//				location.href="https://www.baidu.com";
+//			},false);
+//			item2.addEventListener("click",function(event){
+//				document.title="I changed the document's titile";
+//			},false);
+//			item3.addEventListener("click",function(event){
+//				alert("hi");
+//			},false);
+			
+			//如果在一个复杂的Web应用程序中，对所有课单击的元素都采用这种方式，那么结果就会有数不清的代码用于添加事件处理程序。
+			//此时，可以利用事件委托技术解决这个问题。使用事件委托，只需在DOM树中尽量最高的层次上添加一个事件处理程序，如下面的例子所示。
+			var list=document.getElementById("myLink");
+			list.addEventListener("click",function(event){
+				var target=event.target;
+				switch(target.id){
+					case "goSomewhere":
+						location.href="https://www.baidu.com";
+						break;
+					case "doSomething":
+						document.title="I changed the document's title";
+						break;
+					case "sayHi":
+						alert("hi");
+						break;
+				}
+			},false);
+			
+			//在这段代码里,我们使用事件委托只为<ul>元素添加了一个onclick事件处理程序。
+			//由于所有列表项都是这个元素的子节点，而且他们的事件会冒泡，所以单击事件最终会被这个函数处理。
+			//事件目标是被单击的列表项，故而可以通过检测id属性来决定采取适当的操作。
+			//与前面未使用事件委托的代码比一比，会发现这段代码的事前消耗更低，因为只取得了一个DOM元素，只添加了一个事件处理程序。
+			//虽然对用户来说最终结果都是一样的，但这种技术需要占用的内存更少。
+			//所有用到按钮的事件(多数鼠标事件和键盘事件)都适合采用事件委托技术
+			
+			//如果可行的话，也可以考虑为document对象添加一个事件处理程序，用以处理页面上发生的某种特定类型的事件。
+			//这样做与采取传统的做法相比具有如下优点
+			//1.document对象很快就可以访问，而且可以在页面周期的任何时点上为它添加事件处理程序(无需等待DOMContentLoaded或load事件)。换句话说，只要可单击的元素成现在页面上就可以立即具备适当的功能
+			//2.在页面中设置事件处理程序所需的时间更少。只添加一个事件处理程序所需的DOM引用更少，所花时间也更少
+			//3.整个页面占用的内存空间更少，能够提升整体性能
+			
+			//最适合次用事件委托技术的事件包括click、mousedown、mouseup、keydown、keyup和keypress。
+			//虽然mouseover和mouseout事件也冒泡，但要适当处理它们并不容易，而且经常需要计算元素的位置。
+			//(因为当鼠标从一个元素移到其子节点时，或者当鼠标移出该元素时，都会触发mouseout事件)
+			
+		//13.5.2移出事件处理程序			p404
+			//每当将事件处理程序指定给元素时，运行中的浏览器代码与支持页面交互的JavaScript代码之间就会建立一个连接。这种连接越多，页面执行起来就越慢。
+			//如前所述，可以使用事件委托技术，限制建立的链接数量。
+			//另外，在不需要的时候移除事件处理程序，也是解决这一个问题的一种方案。
+			//内存中留有那些果实不用的"空事件处理程序"(dangling event handler)，也是造成Web应用程序内存与性能问题的主要原因。
+			
+			//在两种情况下，可能会造成上述问题。第一种情况就是从文档中移除带有事件处理程序的元素时。
+			//这可能是通过纯粹的DOM操作，例如使用removeChild()和replaceChild()方法，但更多的是发生在使用innerHTML替换页面中某一部分的时候。
+			//如果带有事件处理程序的元素被innerHTML删除了，那么原来添加到元素中的事件处理程序极有可能无法被当做垃圾回收。
+//			var btn=document.getElementById("myBtn");
+//			btn.onclick=function(event){
+//				document.getElementById("myDiv").innerHTML="Processing..."		//麻烦了
+//			}
+			
+			//这里，有一个按钮被包含在<div>元素中。为避免双击，单击这个按钮时就将按钮移除并替换成一条消息;这是网站设计中非常流行的一种做法。
+			//但问题在于，当按钮被从页面中移除时，他还带着一个事件处理程序。
+			//在<div>元素上设置爱innerHTML可以把按钮移走，但事件处理程序仍然与按钮保持着引用关系。
+			//有的浏览器(尤其是IE)在这种情况下不会做恰当地处理，他们很有可能会将对元素和对事件处理程序的引用都保存在内存中。
+			//如果你知道某个元素即将被移除，那么最好手工移除事件处理程序。
+			var btn=document.getElementById("myBtn");
+			btn.addEventListener("click",function(event){
+				event.target.addEventListener("click",arguments.callee,false);
+				alert(event.type);
+				document.getElementById("myDiv").innerHTML="Processing";
+			},false);
+			//我们在设置<div>的innerHTML属性之前，先移除了按钮的事件处理程序。这样就确保了内存可以被再次利用，而从DOM中移除按钮也做到了干净利索
+			//注意，在事件处理程序中删除按钮也能组织事件冒泡。目标元素在文档中是事件冒泡的前提
+			//采用事件委托也有助于解决这个问题。如果事先知道将来有可能使用innerHTML替换掉页面中的某一部分，那么就可以不直接把事件处理程序添加到该部分的元素中
+			//而通过把事件处理程序指定给较高层次的元素，同样能够处理该区域中的事件。
+			
+			//
+		</script>
+	</body>
+</html>

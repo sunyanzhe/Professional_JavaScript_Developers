@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<script>
+			function B(){
+				this.name='b';
+			}
+			B.prototype.getname=function(){
+				return this.name;
+			}
+			function A(){
+				this.name='a';
+			}
+			//继承
+			A.prototype=new B();
+			
+			//实例
+			a=new A();
+			console.log(a.getname());
+			
+			var mm=1;
+			var dd=(mm/10).toFixed(2)*10
+			console.log(dd);
+		</script>
+	</body>
+</html>

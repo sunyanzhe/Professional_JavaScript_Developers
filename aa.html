@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<script>
+			
+//			var aa=function(){
+//				console.log(arguments.callee.prototype);
+//			}
+//			aa();
+//			var a=111;
+//			function test(){
+//				alert(a);
+//				var a=11;
+//				return function(){
+//					alert(a+"m");
+//				}
+//			}
+//			test();
+
+//		function Aa(){
+//			Aa.prototype.aa="aa"
+//			Aa.prototype.bb="bb";
+//			Aa.prototype.cc=function(){
+//				return aa;
+//			}
+//		}
+//		var obj=new Aa();
+//		for(var i in obj){
+//			console.log(Aa[i]);
+//		}
+		var m=5.499999999999;
+		var b=m.toFixed(3);
+		console.log(b);
+		
+		var obj=new Object();
+		Object.defineProperties(obj,{
+			name:{
+				value:'sun',
+				enumerable:true,
+				configurable:true,
+				writable:true
+			},
+			age:{
+				value:22,
+				enumerable:false,
+				configurable:false,
+				writable:false,
+			}
+		})
+//		Object.getOwnPropertyDescriptor()
+		function outer(){
+			inner();
+		}
+		function inner(){
+			alert(arguments.caller);
+		}
+		outer();
+		document.body.setUserData("name","Nicholas",function(){});
+		alert(document.body.getUserData("name"));
+		</script>
+	</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style>
+			#drop{
+				width: 400px;
+				height: 400px;
+				border: 1px solid black;
+				overflow-y: auto;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="drop"></div>
+		<img id="pic" src="../第十五章 使用Canvas绘图/img1.jpg" alt="tu" />
+		<script>
+			window.onload=function(){
+				var drop=document.getElementById("drop");
+				drop.addEventListener("dragenter",handleEvent,false);
+				drop.addEventListener("dragover",handleEvent,false);
+				drop.addEventListener("drop",handleEvent,false);
+				var pic=document.getElementById("pic");
+				pic.addEventListener("dragstart",handleEvent,false);
+				
+			}
+			function handleEvent(event){
+				switch(event.type){
+					case "dragover":
+					case "dragenter":
+						event.preventDefault();
+						event.dataTransfer.dropEffect="copy";
+						break;
+					case "dragstart":	
+						event.dataTransfer.effectAllowed="all";
+						break;
+					case "drop":
+						var src=event.dataTransfer.getData("url")||event.DataTransfer.getData("uri-list");
+						var img=document.createElement("img");
+						img.src=src;
+						event.target.appendChild(img);
+				}
+			}
+		</script>
+	</body>
+</html>

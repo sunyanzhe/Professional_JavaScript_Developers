@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        //Cookie由浏览器保存以下几块信息构成
+        //1.名称：一个唯一确定Cookie的名称。Cookie名称是不区分大小写的，所以myCookie和mycookie被认为是同一个cookie。然而，事件中最好将cookie名称看作是区分大小写的，因为某些服务器会这样处理cookie。cookie名称必须是经过URL编码的
+        //2.值：储存在cookie中的字符串值。值必须被URL编码
+        //3.域:cookie对哪个域都是有效的。所有向该域发送的请求中都会包含这个cookie信息。这个值可以包含子域(subdomain,如www.wrox.com)，也可以不包含它(如.wrox.com,则对于wrox.com的所有子域都有效)。如果没有明确设定，那么这个与会被人做来自设置cookie的哪个域
+        //4.路径：对于指定域中的那个路径，应该向服务器发送cookie。例如，你可以指定cookie只有从http://www.wrox.com/books/中才能访问，那么http://www.wrox.com的页面就不会发送cookie信息，即使请求都是来自同一个域的
+        //5.失效时间：表示cookie何时应该被删除的时间戳(也就是，何时应该停止向服务器发送这个cookie)。默认情况下，浏览器会话结束时即将所有cookie删除；不过也可以自己设置删除时间。这个值是个GMT格式的日期(Wdy,DD-Mon-YYYY HH:MM:SS GMT),用于指定应该删除cookie的准确时间。因此，cookie可在浏览器关闭后依然保存在用户的机器上。如果你设置的实效日期是一个以前的事件，则cookie会被立刻删除
+        //6.安全标志：指定后，cookie只有在使用SSL链接的时候才发送到浏览器。例如，cookie信息只能发送给https://www.wrox.com，而http://www.wrox.cm的请求则不能发送cookie
+
+        //每一段信息都作为Set-Cookie头的一部分，使用分号加空格分隔每一段
+        //HTTP/1.1 200 OK
+        //Content-type: text/html
+        //Set-Cookie:name=vaule;expires=Mon,22-JAN-07 07:10:24 GMT; domain=.wrox.com
+        //Other-head:other-header-value
+
+        //该头信息制定了一个叫做name的cookie，它会在格林威治事件2007年1月22日7:10:24失效，同时对于www.wrox.com和wrox.com的任何子域(如p2p.wrox.com)都有效
+
+        //secure标志是cookie中唯一一个为名值对儿的部分，直接包含一个secure单词。如下
+        //HTTP/1.1 200 OK
+        //Content-type:text/html
+        //Set-Cookie:name=value; domain=.wrox.com; path=/; secure
+        //Other-header:other-header-value
+
+        //这里创建了一个对于所有wrox.com的子域和域名下(由path参数指定的)所有页面都有效的cookie
+        //因为设置了secure标志，这个cookie只能通过SSL连接才能传输
+        console.log("sunyanzhe".indexOf("sun"));
+        var CokkieUtil={
+            get:function(name){
+                var cookieNmae=encodeURIComponent(name)+"=",
+                    cookieStart=document.cookie.indexOf(cookieName),
+                    cookieValue=null;
+                if(cookieStart>-1){
+                    var cookieEnd=document.cookie.indexOf(";",cookieStart);
+                    if(cookieEnd==-1){
+                        cookieEnd==document.cookie.length;
+                    }
+                    cookieValue=decodeURIComponent(document.cookie.substring(cookieStart+cookieName.length,cookieEnd));
+                }
+                return cookieValue;
+            },
+            set:function(name,value,expires,path,domain,secure){
+                var cookieText=encodeURIComponent(name)+"="+encodeURIComponent(value);
+                if(expires instanceof Date){
+                    cookieText+="; expires="+expires.toGMTString();
+                }
+                if(path){
+                    cookieText+="; path="+path;
+                }
+                if(domain){
+                    cookieText+="; domain"+domain;
+                }
+                if(secure){
+                    cookieText+="; secure";
+                }
+                document.cookie=cookieText;
+            },
+            unset:function(name,path,domain,secure){
+                this.set(name,"",new Data(0),path,domain,secure);
+            }
+        }
+        
+    //子cookie
+        //为了绕开浏览器的单域名下的cookie数限制，一些开发人员使用了一种名为子cookie(subcookie)的概念。
+        //子cookie是存放在单个cookie中的更小段的数据。也就是使用cookie值来存储多个名称值对儿。字cookie最常见的格式如下所示
+        //name=name1=value1&name2=value2&name3=value3&name4=value4&name5=value5
+        //子cookie一般也以查询字符串的格式进行格式化。然后这些值可以使用单个cookie进行存储的和访问，而非对每个名称-值对儿使用不同的cookie存储。最后网站或者web应用程序可以无需达到单域名cookie上线也可以存储更加结构化的数据
+        //为了更好地操作子cookie，必须建立一系列新方法。子cookie的解析和序列化会因子cookie的期望用途而略有不同并更加复杂些。例如，要获得一个子cookie，首先要遵循和获得cookie一样的基本步骤，但是在解码cookie值之前，需要按如下方法出子cookie的信息 
+        var SubCookieUnitl={
+            get:function(name,subname){
+                var subCookies=this.getAll(name);
+                if(subCookies){
+                    return subCookies[subname];
+                }else{
+                    return null;
+                }
+            },
+            getAll:function(name){
+                var cookieName=encodeURIComponent(name)+"=",
+                    cookieStart=document.cookie.indexOf(cookieName),
+                    cookieValue=null,
+                    cookieEnd,
+                    subCookies,
+                    parts,
+                    result={};
+                if(cookieStart>-1){
+                    cookieEnd=document.cookie.indexOf(";",cookieStart);
+                    if(cookieEnd==-1){
+                        cookieEnd=document.cookie.length;
+                    }
+                    cookieValue=document.cookie.substring(cookieStart+cookieName.length,cookieEnd);
+                    if(cookieValue.length>0){
+                        subCookies=cookieValue.split("&");
+                        subCookies.forEach(function(item,index,arr){
+                            parts=item.split("=");
+                            result[decodeURIComponent(parts[0])]=decodeURIComponent(parts[1]);
+                        })
+                        return result;
+                    }
+                }
+                return null;
+            },
+            set:function(name,subName,value,expires,path,domain,secure){
+                var subcookies=this.getAll(name)||{};
+                subcookies[subName]=value;
+                this.setAll(name,subcookies,expires,path,domain,secure);
+            },
+            setAll:function(name,subcookies,expires,path,domain,secure){
+                var cookieText=encodeURIComponent(name)+"=",
+                    subcookieParts=new Array(),
+                    subName;
+                for(subName in subcookies){
+                    if(subName.length>0&&subcookies.hasOwnPropety(subName)){
+                        subcookieParts.push(encodeURIComponent(subName)+"="+encodeURIComponent(subcookies[subName]));
+                    }
+                }
+                if(cookieParts.length>0){
+                    cookieText+=subcookieParts.join("&");
+                    if(expires instanceof Date){
+                        cookieText+="; expires="+expires.toGMTString();
+                    }
+                    if(path){
+                        cookieText+="; path="+path;
+                    }
+                    if(domain){
+                        cookieText+="; domain="+domain;
+                    }
+                    if(secure){
+                        cookieText+="; secure";
+                    }
+                }
+            },
+            unset:function(name,subName,path,domain,secure){
+                var subcookies=this.getAll(name);
+                if(subcookies){
+                    delete subcookies[subName];
+                    this.setAll(name,subcookies,null,path,domain,secure);
+                }
+            },
+            unsetAll:function(name,path,domain,secure){
+                this.setAll(name,null,new Date(0),path,domain,secure);
+            }
+        };
+    </script>
+</body>
+</html>

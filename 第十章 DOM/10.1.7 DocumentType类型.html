@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>10.1.7DocumentType类型</title>
+	</head>
+	<body>
+		<script>
+			//10.1.7DocumentType类型
+				//DocumentType类型在Web浏览器中并不常用，仅有Firefox、Safari和Opera支持它。
+				//DocumentType包含着与文档的doctype有关的所有信息，它具有以下特征:
+					//1.nodeType的值为10；
+					//2.nodeName的值为doctype的名称
+					//3.nodeValue的值为null
+					//4.parentNode是Document
+					//5.不支持(没有)子节点
+				
+				//在DOM1级中，DocumentType对象不能动态创建，而只能通过解析文档代码的方式来创建。
+				//支持它的浏览器会它DocumentType对象保存在document.doctype中。
+				//DOM1级描述了DocumentType对象的3个属性:name、entities和notations。
+				//其中，name表示文档类型的名称;entities是由文档类型描述的实体NameNodeMap对象;notations是由文档类型描述的符号的NamedNodeMap对象
+				//通常，浏览器中的文档使用的都是HTML或XHTML文档类型，因而entities和notations都是空列表(列表中的项来自行内文档类型声明)。
+				//不管怎么样，只有name属性是有用的。这个属性中保存的是文档类型的名称，也即是出现在<!DOCTYPE之后的文本。
+				//以下面严格型HTML4.01的文档类型声明为例
+				//	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html14/strict.dtd">
+				
+				//DocumentType的name属性中保存的是"HTML"
+				console.log(document.doctype.name)
+		</script>
+	</body>
+</html>

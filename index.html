@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+	</head>
+	<body>
+		<div id="a1">aaaaa</div>
+		<button class="btn" type="button">1</button>
+		<button class="btn" type="button">2</button>
+		<button class="btn" type="button">3</button>
+	</body>
+	<script>
+		var a=0.1,b=0.2;
+		var mm="123";
+		mm++;
+		function aa(a,b){
+			return a+b;
+		}
+//		alert(aa(a,b));
+		alert(mm);
+		var friend=new Person();
+//		function Person(){
+//			Person.prototype.name="11";
+//		}
+//		Person.prototype.sayHi=function(){
+//			alert("hi");
+//		}
+//		friend.sayHi();
+		function Person(){
+			Person.prototype.name="aa";
+		}
+		var friend=new Person();
+		alert(friend instanceof Person);
+		
+		console.log(document.getElementById("a1").nodeName);
+		
+		window.onload=function(){
+			var btns=document.getElementsByClassName("btn");
+			var i=0;
+			setTimeout(function(){
+				btns[i].onclick=function(){alert(i)};
+				i++;
+				if(i<3){
+					setTimeout(arguments.callee,100);
+				}
+			},100)
+		}
+
+
+	</script>
+</html>

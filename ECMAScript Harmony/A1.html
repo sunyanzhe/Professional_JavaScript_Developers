@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title></title>
+</head>
+<body>
+    <script>
+        //使用const关键字声明变量的语法。使用方式与var类似，但const声明的变量在初始赋值后，就不能重新赋值了。
+        const Max_Size=25;          
+        //使用const声明过变量后，在使用var声明相同的变量会报错
+        
+        //新增了定义块级作用域的语法：使用let关键字
+        //与const和var类似，可以使用let在任何地方定义变量并为变量赋值。区别在于，使用let定义的变量在定义它的代码块之外没有定义
+        var a=0;
+        for(let i=0;i<10;i++){
+            a++;
+        }
+      //  console.log(i);             //报错
+        
+        //A.2函数
+        //生成器
+        
+        var generator=myNumbers();
+        console.log(generator.next());
+
+        function aa(max){
+            var a=0,b=1,c=max,arr=[0,1];
+            for(var i=arr.length;i<c;i++){
+                [a,b]=[b,a+b];
+                arr.push(b);
+            }
+            return arr;
+        }
+    </script>
+</body>
+</html>

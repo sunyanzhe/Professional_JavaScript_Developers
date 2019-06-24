@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>富文本编辑Demo</title>
+	</head>
+	<style>
+		#richedit{
+			width: 500px;
+			height: 300px;
+			border: 1px solid black;
+			
+		}
+	</style>
+	<body>
+		<div class="btns">
+			<input id="bold" type="button" value="加粗" />
+			<input id="italic" type="button" value="斜体" />
+			<input id="h1" type="button" value="一级标题" />
+			<input id="red" type="button" value="红色" />
+			<input id="bc-yellow" type="button" value="背景红色" />
+		</div>
+		<input id="text" type="text" value="aaa" />
+		<div id="richedit" contenteditable="true">12123</div>
+		<script>
+			var edit=document.getElementById("richedit");
+			function addstyle(event){
+				switch (event.target.id){
+					case "bold":
+						document.execCommand("bold",false,null);
+						break;
+					case "italic":
+						document.execCommand("italic",false,null);
+						break;
+					case "h1":
+						if(document.queryCommandValue("formatblock")){
+							var selection=document.getSelection();
+							var selectionText=document.createTextNode(selection.toString());
+							selection.deleteFromDocument();
+							document.getElementById("richedit").appendChild(selectionText);
+//							document.execCommand("removeformat",false,null);
+						}else{
+							document.execCommand("formatblock",false,"h1");	
+							}
+						break;
+					case "red":
+						document.execCommand("forecolor",false,"red");
+						break;
+					case "bc-yellow":
+						document.execCommand("backcolor",false,"yellow");
+						break;
+				}
+			}
+			var btns=document.querySelector(".btns");
+			console.log(btns);
+			btns.addEventListener("click",addstyle,false);
+			
+		</script>
+	</body>
+</html>

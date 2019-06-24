@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        function countArray(arr){
+            var i=0,len=arr.length,obj={},item,key,str="";
+            for(i=0;i<len;i++){
+                item=arr[i];
+                obj[item]?(obj[item]++):(obj[item]=1);
+            }
+            for(key in obj){
+                str+=key+"="+obj[key]+" ";
+            }
+            console.log(str);
+        }
+        countArray(["a","a","a","a","a","a","a","a","a","a","b","b","b","b","b","b","b","b","c"])
+
+        var mm="abcdefg"
+       var n=mm.substring(4,2)
+        console.log(n);
+    </script>
+</body>
+</html>

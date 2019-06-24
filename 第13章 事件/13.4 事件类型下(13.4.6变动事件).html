@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>事件类型下</title>
+	</head>
+	<body>
+		<ul id="myList">
+			<li>item1</li>
+			<li>item2</li>
+			<li>item3</li>
+		</ul>
+		<ul id="myList2">
+			<li>item1</li>
+			<li>item2</li>
+			<li>item3</li>
+		</ul>
+		<script>
+		//13.4.6变动事件		p385
+			//DOM2级的变动(mutation)事件能在DOM中的某一部分发生变化时给出提示。
+			//变动事件是为XML或HTML DOM设计的，并不特定于某种语言。DOM2级定义了如下变动事件。
+				//1.DOMSubtreeModified:在DOM结构中发生任何变化时触发。这个事件在其他任何事件触发后都会触发
+				//2.DOMNodeInserted:在一个节点作为子节点被插入到另一个节点时触发
+				//3.DOMNodeRemoved:在节点从其父节点中被移除时触发
+				//4.DOMNodeInsertedIntoDocument:在一个节点被直接插入文档或通过子树间接插入文档之后触发。这个事件在DOMNodeInserted之后触发
+				//5.DOMNodeRemovedFromDocument:在一个节点被直接从文档中移除或通过子树间接从文档中移除之前触发。这个事件在DOMNodeRemoved之后触发
+				//6.DOMAttrModified:在特性被修改之后触发
+				//7.DOMCharacterDataModified:在文本节点的值发生变化时触发
+			
+			//使用下列代码可以检测出浏览器是否支持变动事件:
+			var isSupported=document.implementation.hasFeature("MutationEvents","2.0");
+			
+			//由于DOM3级事件模块作废了很多变动事件，所以只介绍将来仍然会得到支持的事件。
+			//1.删除节点
+				//在使用removeChild()和replaceChild()从DOM中删除节点时，首先会触发DOMNodeRemoved事件。
+				//这个事件的目标(event.target)是被删除的节点，而event.relatedNode属性中包含着对目标节点父节点的引用
+				//这个事件触发时，节点尚未从父节点删除，因此parentNode属性仍然指向父节点(与event.relateNode相同)。
+				//这个事件会冒泡，因而可以在DOM的任何层次上面处理它
+				
+				//如果被移除的节点包含子节点，那么在其所有子节点以及这个被移除的节点上会相继触发DOMNodeRemovedFromDocument事件。
+				//但这个事件不会冒泡，所以只有直接指定给其中一个子节点的事件处理程序才会被调用。
+				//这个事件的目标是相应的子节点或者那个被移除的节点，除此之外event对象中不包含其他信息
+				
+				//紧随其后触发的是DOMSubtreeModified事件。这个事件的目标是被移除节点的父节点；此时的event对象不会提供与事件相关的其他信息
+				
+				//假设要移除<ul>元素。此时，就会依次触发以下条件
+				//1.在<ul>元素上触发DOMNodeRemoved事件。relatedTarget属性等于document.body
+				//2.在<ul>元素上触发DOMNodeRemovedFromDocument事件
+				//3.在身为<ul>元素子节点的每个<li>元素及文本节点上触发DOMNodeRemovedFromDocument事件
+				//4.在document.body上触发DOMSubtreeModified事件，因为<ul>元素是document.body的直接子元素
+				
+				window.onload=function(event){
+					var list=document.getElementById("myList");
+					document.addEventListener("DOMNodeRemoved",function(event){
+						alert(event.type);
+						alert(event.target);
+						alert(event.relatedNode);
+					},false);
+					list.firstChild.addEventListener("DOMNodeRemovedFromDocument",function(event){
+						alert(event.type);
+						alert(event.target);
+					},false);
+					document.addEventListener("DOMSubtreeModified",function(event){
+						alert(event.type);
+						alert(event.target);
+					},false);
+					
+					list.parentNode.removeChild(list);
+				}
+				
+				//以上代码为document添加了针对DOMSubtreeModified和DOMNodeRemoved事件的处理程序，以便在页面上处理这些事件。
+				//由于DOMNodeRemovedFromDocument不会冒泡，所有将针对他的事件处理程序直接添加给<ul>元素的第一个子节点(在兼容DOM的浏览器中是一个文本节点)
+				//在设置了以上事件处理程序后，代码从文档中移除了<ul>元素
+				
+			//2.插入节点		p387
+				//在使用appendChild()、replaceChild()或insertbefore()向DOM中插入节点时，首先会触发DOMNodeInserted事件。
+				//这个事件的目标是被插入的节点，而event.relatedNode属性中包含一个对父节点的引用。
+				//在这个事件触发时，节点已经被插入到了新的父节点中。这个事件是冒泡的，因此可以在DOM的各个层次上处理它
+				
+				//紧接着，会在新插入的节点上面触发DOMNodeInsertedIntoDocument事件。
+				//这个事件不冒泡，因此必须在插入节点之前为它添加这个事件处理程序。
+				//这个事件的目标是插入的节点，除此之外event对象中不会包含其他信息。
+				
+				//最后一个触发的事件时DOMSubtreeModified，触发于新插入节点的父节点
+			window.addEventListener("load",function(event){
+				var list=document.getElementById("myList2");
+				var li=document.createElement("li");
+				li.appendChild(document.createTextNode("item4"));
+				document.addEventListener("DOMNodeInserted",function(event){
+					alert(event.type);
+					alert(event.target);
+					alert(event.relatedNode);
+				},false);
+				document.addEventListener("DOMSubtreeModified",function(event){
+					alert(event.type);
+					alert(event.target);
+				},false);
+				li.addEventListener("DOMNodeInsertedIntoDocument",function(event){
+					alert(event.type);
+					alert(event.target);
+				},false);
+				list.appendChild(li);
+			},false);
+			
+			//以上代码首先创建了一个包含文本"item4"的新<li>元素。
+			//由于DOMSubtreeModified和DOMNodeInserted事件是冒泡的，所以把它们的事件处理程序添加到了文档中。
+			//在将列表插入到其父节点之前，现将DOMNodeInsertedIntoDocument事件的事件处理程序添加给它。
+			//最后一步就是使用appendChild()来添加这个列表项;此时,事件开始依次是被触发。
+			//首先是在新<li>元素项上触发DOMnodeInserted事件，其relatedNode是<ul>元素。
+			//然后是触发新<li>元素上的DOMNodeInsertedIntoDocument，最后触发<ul>元素上DOMSubtreeModified事件。
+			
+		
+		</script>
+	</body>
+</html>

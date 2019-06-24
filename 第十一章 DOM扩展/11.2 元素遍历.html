@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>11.2元素遍历</title>
+	</head>
+	<body>
+		<div id="div">
+			<p></p>
+			<p></p>
+			<p></p>
+		</div>
+		<script>
+			//对于元素间的空格，IE9及之前班恩不会返回文本节点，而其他所有浏览器都会返回文本节点。
+			//这样，就导致了在使用childNodes和firstChild等属性时的行为不一致。
+			//为了弥补这一差异，而同时由保持DOM规则不变 定义了新的属性
+			
+			//1.childElementCount：返回子元素(不包括文本节点和注释)的个数
+			//2.firstElementChild:指向第一个子元素;firstChild的元素版
+			//3.lastElementChild:指向最后一个子元素;lastChild的元素版
+			//4.previousElementSibling:指向前一个同辈元素;previousSibling的元素版
+			//5.nextElementSibling:指向后一个同辈元素;nextSibling的元素版
+			
+			//过去，要跨浏览器遍历某个元素的所有子元素
+			function eachElement(element){
+				var child=element.firstChild;
+				var chlidElements=[];
+				while(child!=element.lastChild){
+					if(child){
+						chlidElements.push(child);
+					}
+					child=child.nextSiblings;
+				}
+				return chlidElements;
+			}
+			//使用nextElementSibling
+			function eachElement(element){
+				var child=element.firstElementChild;
+				var childElemets=[];
+				while(child!=element.lastElementChild){
+					childElemets.push(child);
+					child=child.nextElementSibling;
+				}
+				return childElemets;
+			}
+			console.log(eachElement(document.getElementById("div")));
+			
+			//支持Element Traversal规范的浏览器有IE9+ Firefox3.5+ Safari4+ Chrome和Opera10+
+		</script>
+	</body>
+</html>
